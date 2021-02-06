@@ -1,3 +1,4 @@
+// cwiczenie 1 GPIO
 #include<stdio.h>
 #include "stm32f3xx.h"                  // Device header
 #include "main.h"
