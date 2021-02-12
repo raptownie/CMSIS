@@ -392,13 +392,6 @@
         </Group>
         <Group>
           <GroupName>Headers</GroupName>
-          <Files>
-            <File>
-              <FileName>main.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\main.h</FilePath>
-            </File>
-          </Files>
         </Group>
         <Group>
           <GroupName>::CMSIS</GroupName>
