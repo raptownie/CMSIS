@@ -23,27 +23,25 @@ void delay_ms(uint32_t time);
 void HSI_without_PLL(void);
 void HSI_with_PLL(void);
 
-
-
 static volatile uint32_t timer_ms;
    
 int main()
 {
 
-   GPIO_Init();
-   
-   
+   GPIO_Init();   
    
    /* SysTick notatki
    W stmach zawsze po resecie zródlem sygnalu jest HSI (high speed internal), czyli wewnetrzny generator szybkich przebiegow, dla STM32F3 to 8MHz.
    Czestotliwosc ta moze byc zmieniona przez petle PLL (podzielona przez 2), nastepnie pomnozona.
    Sygnalem zegara systemowego moze byc rowniez HSE - czyli high speed external, zewnetrzny oscylator kwarc.   
+   Dokumentacja funkcji SysTick_config() i rejestrow https://developer.arm.com/documentation/dui0552/a/cortex-m3-peripherals/system-timer--systick
    */   
+   
    HSI_with_PLL();
   // HSI_without_PLL();
-   uint16_t temp= 0x100;
-   GPIOE->ODR |= temp;
    
+   uint16_t temp= 0x100;   
+   GPIOE->ODR |= temp;
    while(1){   
    //diody na plytce discovery swieca sie w kolko jedna po drugiej
    temp <<= 1;   
@@ -54,16 +52,13 @@ int main()
       GPIOE->ODR = temp;
    }
    delay_ms(5000);
-   
       
    //GPIO_zPrzyciskiem();
-   //GPIO_Kolko();
+   //GPIO_Kolko();  
    
-   
-   }
-   
-   
+   }     
 }
+
 void delay_ms(uint32_t time){
    timer_ms=time;
    while(timer_ms);
@@ -133,25 +128,19 @@ void GPIO_Init(void){
    GPIOA->MODER &= (uint32_t)~0x0003;              // ustawienie PA0 jako wyjscie podciagniete do VCC standardowo.
 }
 
-void SysTick_Init(void){
-   /*
-   SysTick->CTRL=5;
-   SysTick->LOAD = 4;
-   SysTick->VAL=5;
-   SysTick->CALIB=5;
-   */
-   
-}
-
 void SysTick_Handler(void){
    if (timer_ms) timer_ms--;
 }
+
 void HSI_without_PLL(void){
    SysTick_Config(HSI_Clock/1000); // ustawienie przerwania co 1ms
 }
 
 void HSI_with_PLL(void){
-   RCC->CR &= (uint32_t)~0x2000000;             // PLL unlocked
+
+    if ((RCC->CR & 0x2) == (uint16_t)0x2){   // sprawdzenie flagi czy HSI jest stabilne
+      GPIOE->ODR |= (uint16_t)Pin_14;
+   }
    RCC->CR &=(uint32_t)~0x1000000;              // wylaczenie PLL
    RCC->CFGR &=(uint32_t)~0x1;                  // System clock switch 01 : PLL selectes as system clock
    RCC->CFGR |= 0x2; 
@@ -161,6 +150,6 @@ void HSI_with_PLL(void){
    RCC->CFGR &= (uint32_t)~0x2C0000;            // PLL input clock x6
    RCC->CFGR |= (uint32_t)0x100000;
    RCC->CR |= (uint32_t)0x1000000;              //wlaczenie PLL
-   RCC->CR |= (uint32_t)0x2000000;              // PLL locked
+
    SysTick_Config(HSI_Clock_PLL/1000);          //ustawienie przerwania co 1ms
 }
