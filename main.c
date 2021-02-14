@@ -30,21 +30,16 @@ static volatile uint32_t timer_ms;
    
 int main()
 { 
-   
-   /* SysTick notatki
-   W stmach zawsze po resecie zródlem sygnalu jest HSI (high speed internal), czyli wewnetrzny generator szybkich przebiegow, dla STM32F3 to 8MHz.
-   Czestotliwosc ta moze byc zmieniona przez petle PLL (podzielona przez 2), nastepnie pomnozona.
-   Sygnalem zegara systemowego moze byc rowniez HSE - czyli high speed external, zewnetrzny oscylator kwarc.   
-   Dokumentacja funkcji SysTick_config() i rejestrow https://developer.arm.com/documentation/dui0552/a/cortex-m3-peripherals/system-timer--systick
-   */   
-
    HSI_with_PLL();
    //HSE_with_PLL();       //to narazie nie dziala
   // HSI_without_PLL();
-  // TIM7_config();
+   TIM7_config();
+   
    
    GPIO_Init(); 
    
+   GPIOE->BRR |= Pin_12;
+   GPIOE->BRR |= Pin_12;
    uint16_t temp= 0x100;   
    GPIOE->ODR |= temp;
    
@@ -135,6 +130,13 @@ void GPIO_Init(void){
 }
 
 void SysTick_Handler(void){
+      /* SysTick notatki
+   W stmach zawsze po resecie zródlem sygnalu jest HSI (high speed internal), czyli wewnetrzny generator szybkich przebiegow, dla STM32F3 to 8MHz.
+   Czestotliwosc ta moze byc zmieniona przez petle PLL (podzielona przez 2), nastepnie pomnozona.
+   Sygnalem zegara systemowego moze byc rowniez HSE - czyli high speed external, zewnetrzny oscylator kwarc.   
+   Dokumentacja funkcji SysTick_config() i rejestrow https://developer.arm.com/documentation/dui0552/a/cortex-m3-peripherals/system-timer--systick
+   */   
+   
    if (timer_ms) timer_ms--;
 }
 
@@ -174,7 +176,7 @@ void HSI_with_PLL(void){
 
 void HSE_with_PLL(void){
    
-   //to narazie nie dziala
+   //to narazie nie dziala - brak zewnetrznego sygnalu zegarowego
    RCC->CR|=0x40000;                   // RCC->CR |= RCC_CR_HSEBYP;   ok
    RCC->CFGR &= (uint32_t)~0x2000;     //RCC->CFGR |= RCC_CFGR_PLLXTPRE_HSE_PREDIV_DIV1;   nok
    RCC->CR |= 0x1;                     //RCC->CR |= RCC_CR_HSION;   ok
@@ -205,24 +207,36 @@ void TIM7_config(void){
    Notatki basic Timer
    UIF - Update Interrupts flag
    UEV - Update Event
-   CK_INT - Internal clock source 24MHz APB1
+   CK_INT - Internal clock source dla HSI 64Mhz APB1/2 jest 32MHz
    
    */
-   RCC->APB1ENR |= RCC_APB1ENR_TIM7EN; 
+   RCC->APB1ENR |= RCC_APB1ENR_TIM7EN; // podlaczenie zegara pod TIM7
+   TIM7->PSC = 8000-1;                 // dzielnik ustawiony na 8000 - 64MHz/8000=8kHz
+//   TIM7->CNT = 0x20000;              // ??????? co robi ten rejestr?
+   TIM7->ARR =40000;                   // 8kHz -8 tys impulsow na 1 sekunde - przerwanie co 5s to 8000*5 =40k
+   TIM7->DIER |= 0x1;                  // Update interrupt enabled
+   NVIC_SetPriority(TIM7_IRQn,1);   
+   NVIC_EnableIRQ(TIM7_IRQn);
    TIM7->CR1 |= TIM_CR1_CEN;
-   TIM7->PSC = 2000; // dzielnik ustawiony na 2000
-   TIM7->CNT = 60000; // przerwanie co 5s  
+
    }
 
 void TIM7_IRQHandler(void){
-  static short k=2;
+  static short k;
+  
    if (k%2 ==0){
+      
       GPIOE->ODR |= (uint16_t)Pin_13;
+      GPIOE->ODR &= (uint16_t)~Pin_12;
       k++;
+
    } else{
+      GPIOE->ODR |= (uint16_t)Pin_12;
       GPIOE->ODR &= (uint16_t)~Pin_13;
-      k=2;
+
+      k++;
    }
-   TIM7->SR &= ~TIM_SR_UIF;
+   k==2 ? k=2 : k ;
+   TIM7->SR &= (uint16_t)~0x1;      // clearowanie flagi przerwania
   
 }   
