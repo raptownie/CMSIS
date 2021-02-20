@@ -1,7 +1,7 @@
 // cwiczenie 1 GPIO
 #include<stdio.h>
 #include "stm32f3xx.h"         // Device header
-#include "main.h"
+
 #define Pin_8 0x100
 #define Pin_9 0x200
 #define Pin_10 0x400
@@ -13,7 +13,7 @@
 #define HSI_Clock 8000000        // bez PLL
 
 
-
+//deklaracje funkcji
 void GPIO_Init(void);
 void GPIO_zPrzyciskiem(void);
 void GPIO_Kolko(void);
@@ -29,23 +29,43 @@ void TIM7_IRQHandler(void);
 void TIM1_config(void);
 void TIM1_UP_TIM16_IRQHandler(void);
 void TIM1_CC_IRQHandler(void);
+void EXTI0_config(void);
+void EXTI0_IRQHandler(void);
 
+// deklaracje zmiennych
+static uint8_t EXTI0_flag;                            //flaga wykorzystywana do konfiguracji Timera 1 - przerwania od przycisku PA0 - exti0
 static volatile uint32_t timer_ms;
    
 int main()
 { 
-   HSI_with_PLL();
-   //HSE_with_PLL();                                  //to narazie nie dziala
-  // HSI_without_PLL();
-   TIM7_config();
+   // *** Wybor zegara ***
+   HSI_with_PLL();   
+   //HSE_with_PLL();                                  //to narazie nie dziala (teoretycznie 72MHz)
+   //HSI_without_PLL();                               //taktowanie z 8MHz
+   
+   // *** Inicjalizacja GPIO - ledy + przycisk ***
+   GPIO_Init();
+   
+   // *** TIM1 - licznik advanced, TIM7 - licznik basic (miganie dioda) ***
+   //TIM7_config();
    //TIM1_config();
+
+   // *** Przycisk (PA0) miganie diodami - nieblokujace***
+   EXTI0_config();
       
-   GPIO_Init(); 
+    
   
-   while(1);                                          //potrzebne do dzialania przerwan od timera, inaczej program konczy dzialanie nic sie nie dzieje
+  // while(1);                                          //potrzebne do dzialania przerwan od timera, inaczej program konczy dzialanie nic sie nie dzieje
    //LEDy_kolo();                                     //noreturn
    //GPIO_zPrzyciskiem();
    //GPIO_Kolko();  
+   while (1)
+   {  
+      GPIOE->ODR ^= (uint16_t)Pin_10;
+      delay_ms(300);
+     // GPIO_zPrzyciskiem();      
+   }
+   
 }
 
 void delay_ms(uint32_t time){
@@ -254,43 +274,58 @@ void TIM7_IRQHandler(void){
 void TIM1_config(void){
    RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;                // zegar taktowany 64MHz - bez dzielnika
    TIM1->PSC = 16000-1;                               // Ustawienie prescalera timera 64MHz/16k = 4k
-   TIM1->ARR = 8000;                                  // 4kHz -> 4000 impulsow na 1s, a wiec aby okres licznika byl na 2s trzeba wstawic 8000
+   TIM1->ARR = 4000;                                  // 4kHz -> 4000 impulsow na 1s, a wiec aby okres licznika byl na 2s trzeba wstawic 8000
    TIM1->DIER |= TIM_DIER_UIE;                        // Update interrupt enabled
    NVIC_SetPriority(TIM1_UP_TIM16_IRQn,1);            // Ustawienie priorytetu licznika TIM1
    NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);                // Wlaczenie przerwania
-   // konfigracja kanalow CC1, CC2, CC3
-   //konfiguracja kanalu CC1 TIM1
-   TIM1->CCR1 =5000;
-   TIM1->DIER |= TIM_DIER_CC1IE;
-   //konfiguracja kanalu CC2 TIM1
-   TIM1->CCR2 =2000;
-   TIM1->DIER |= TIM_DIER_CC2IE;
-   //konfiguracja kanalu CC3 TIM1
-   TIM1->CCR3 =6000;
-   TIM1->DIER |= TIM_DIER_CC3IE;
-   NVIC_SetPriority(TIM1_CC_IRQn,2);                  // ustawienie priorytetu kanalow licznika TIM1
-   NVIC_EnableIRQ(TIM1_CC_IRQn);                      // wlaczenie przerwania od kanalow
+   if (EXTI0_flag != 1){ 
+      // konfigracja kanalow CC1, CC2, CC3
+      //konfiguracja kanalu CC1 TIM1
+      TIM1->CCR1 =5000;
+      TIM1->DIER |= TIM_DIER_CC1IE;
+      //konfiguracja kanalu CC2 TIM1
+      TIM1->CCR2 =2000;
+      TIM1->DIER |= TIM_DIER_CC2IE;
+      //konfiguracja kanalu CC3 TIM1
+      TIM1->CCR3 =6000;
+      TIM1->DIER |= TIM_DIER_CC3IE;
+      NVIC_SetPriority(TIM1_CC_IRQn,2);                  // ustawienie priorytetu kanalow licznika TIM1
+      NVIC_EnableIRQ(TIM1_CC_IRQn);                      // wlaczenie przerwania od kanalow
+      
+   }
+   
+   
    
    TIM1->CR1 |= TIM_CR1_CEN;                          // Wlaczenie licznika TIM1
 }
 
 void TIM1_UP_TIM16_IRQHandler(void){ 
    static short k=2;
-   if(((TIM1->SR) & 0x1) == 0x1){
+   if (EXTI0_flag == 1){
+      
+      GPIOE->ODR ^= (uint16_t)Pin_13;
+      GPIOE->ODR ^= (uint16_t)Pin_12;
+      
+      EXTI->PR |= EXTI_PR_PR0;
+      TIM1->SR &= ~TIM_SR_UIF; 
+      TIM1->CR1 &= ~TIM_CR1_CEN;
+      
+   }else{
+      if(((TIM1->SR) & 0x1) == 0x1){
   
-      if (k%2 ==0){      
-         GPIOE->ODR |= (uint16_t)Pin_13;
-         GPIOE->ODR &= (uint16_t)~Pin_12;
-         k++;
-      } else{
-         GPIOE->ODR |= (uint16_t)Pin_12;
-         GPIOE->ODR &= (uint16_t)~Pin_13;
-         k++;
+         if (k%2 ==0){      
+            GPIOE->ODR |= (uint16_t)Pin_13;
+            GPIOE->ODR &= (uint16_t)~Pin_12;
+            k++;
+         } else{
+            GPIOE->ODR |= (uint16_t)Pin_12;
+            GPIOE->ODR &= (uint16_t)~Pin_13;
+            k++;
+         }
+         k>3 ? k=2 : k ;
+         TIM1->SR &= ~TIM_SR_UIF;                        // Czyszczenie flagi glownego przerwania TIM1 
       }
-      k>3 ? k=2 : k ;
-      TIM1->SR &= ~TIM_SR_UIF;                        // Czyszczenie flagi glownego przerwania TIM1       
-
-   }
+   }   
 }
 
 void TIM1_CC_IRQHandler(void){
@@ -298,44 +333,67 @@ void TIM1_CC_IRQHandler(void){
    static short p1=2;
    static short p2=2;
    static short p3=2;
-   if(((TIM1->SR) & TIM_SR_CC1IF) == 0x2){            // sprawdzenie czy przerwanie wywolujace funkcje pochodzi od CC1
-      if (p1%2 ==0){      
-         GPIOE->ODR |= (uint16_t)Pin_15;
-         GPIOE->ODR &= (uint16_t)~Pin_14;
-         p1++;
-      } else{
-         GPIOE->ODR |= (uint16_t)Pin_14;
-         GPIOE->ODR &= (uint16_t)~Pin_15;
-         p1++;
+   
+      if(((TIM1->SR) & TIM_SR_CC1IF) == 0x2){            // sprawdzenie czy przerwanie wywolujace funkcje pochodzi od CC1
+         if (p1%2 ==0){      
+            GPIOE->ODR |= (uint16_t)Pin_15;
+            GPIOE->ODR &= (uint16_t)~Pin_14;
+            p1++;
+         } else{
+            GPIOE->ODR |= (uint16_t)Pin_14;
+            GPIOE->ODR &= (uint16_t)~Pin_15;
+            p1++;
+         }
+         p1>3 ? p1=2 : p1 ;
+         TIM1-> SR &= ~TIM_SR_CC1IF;                     // Czyszczenie flagi przerwania od CC1
       }
-      p1>3 ? p1=2 : p1 ;
-      TIM1-> SR &= ~TIM_SR_CC1IF;                     // Czyszczenie flagi przerwania od CC1
-   }
-   if(((TIM1->SR) & TIM_SR_CC2IF) == 0x4){            // sprawdzenie czy przerwanie wywolujace funkcje pochodzi od CC2
-      if (p2%2 ==0){      
-         GPIOE->ODR |= (uint16_t)Pin_10;
-         GPIOE->ODR &= (uint16_t)~Pin_11;
-         p2++;
-      } else{
-         GPIOE->ODR |= (uint16_t)Pin_11;
-         GPIOE->ODR &= (uint16_t)~Pin_10;
-         p2++;
+      if(((TIM1->SR) & TIM_SR_CC2IF) == 0x4){            // sprawdzenie czy przerwanie wywolujace funkcje pochodzi od CC2
+         if (p2%2 ==0){      
+            GPIOE->ODR |= (uint16_t)Pin_10;
+            GPIOE->ODR &= (uint16_t)~Pin_11;
+            p2++;
+         } else{
+            GPIOE->ODR |= (uint16_t)Pin_11;
+            GPIOE->ODR &= (uint16_t)~Pin_10;
+            p2++;
+         }
+         p2>3 ? p2=2 : p2 ;
+         TIM1-> SR &= ~TIM_SR_CC2IF;                     // Czyszczenie flagi przerwania od CC2
       }
-      p2>3 ? p2=2 : p2 ;
-      TIM1-> SR &= ~TIM_SR_CC2IF;                     // Czyszczenie flagi przerwania od CC2
-   }
-      if(((TIM1->SR) & TIM_SR_CC3IF) == 0x8){         // sprawdzenie czy przerwanie wywolujace funkcje pochodzi od CC3
-      if (p3%2 ==0){      
-         GPIOE->ODR |= (uint16_t)Pin_8;
-         GPIOE->ODR &= (uint16_t)~Pin_9;
+         if(((TIM1->SR) & TIM_SR_CC3IF) == 0x8){         // sprawdzenie czy przerwanie wywolujace funkcje pochodzi od CC3
+         if (p3%2 ==0){      
+            GPIOE->ODR |= (uint16_t)Pin_8;
+            GPIOE->ODR &= (uint16_t)~Pin_9;
          p3++;
-      } else{
-         GPIOE->ODR |= (uint16_t)Pin_9;
-         GPIOE->ODR &= (uint16_t)~Pin_8;
-         p3++;
+         } else{
+            GPIOE->ODR |= (uint16_t)Pin_9;
+            GPIOE->ODR &= (uint16_t)~Pin_8;
+            p3++;
+         }
+         p3>3 ? p3=2 : p3 ;
+         TIM1-> SR &= ~TIM_SR_CC3IF;                     // Czyszczenie flagi przerwania od CC3                  
       }
-      p3>3 ? p3=2 : p3 ;
-      TIM1-> SR &= ~TIM_SR_CC3IF;                     // Czyszczenie flagi przerwania od CC3                  
-   }
+   
 
 }
+
+void EXTI0_config(void){
+   // konfiguracja PA0 jako przerwanie zewnerzne
+   SYSCFG->EXTICR[1] |= SYSCFG_EXTICR1_EXTI0_PA;   //podlaczenie PA0 do lini EXTI0; EXTICR1,EXTICR2... zdefiniowane sa jako tablice, dlatego taki zapis
+   EXTI->IMR |= EXTI_IMR_MR0;                      // IRM - interrupt mask register - wlaczenie maskowania dla lini EXTI0 
+   EXTI->RTSR |= EXTI_RTSR_RT0;                    // RTSR - Raising Trigger Selection register
+   NVIC_SetPriority(EXTI0_IRQn, 4);
+   NVIC_EnableIRQ(EXTI0_IRQn);
+   EXTI0_flag = 1;                                 //flage te wykorzystuje po to by nie musiec wykorzystywac kolejnego licznika (do konfiguracji TIM1)
+   TIM1_config();
+}
+
+void EXTI0_IRQHandler(void){  
+   if((EXTI->PR & EXTI_PR_PR0) == EXTI_PR_PR0){     //sprawdzenie czy zródlem przerwania jest EXTI0
+      // dzialanie nieblokujace z wykorzystaniem licznika TIM1 
+      TIM1->CR1 |= TIM_CR1_CEN;      
+      EXTI->PR |= EXTI_PR_PR0;                     // clearowanie flagi przerwania
+   }
+   
+}
+
