@@ -48,10 +48,10 @@ int main()
    
    // *** TIM1 - licznik advanced, TIM7 - licznik basic (miganie dioda) ***
    //TIM7_config();
-   //TIM1_config();
+   TIM1_config();
 
    // *** Przycisk (PA0) miganie diodami - nieblokujace***
-   EXTI0_config();
+   //EXTI0_config();
       
     
   
@@ -61,8 +61,10 @@ int main()
    //GPIO_Kolko();  
    while (1)
    {  
-      GPIOE->ODR ^= (uint16_t)Pin_10;
+     GPIOE->ODR ^= (uint16_t)Pin_10;
+
       delay_ms(300);
+      
      // GPIO_zPrzyciskiem();      
    }
    
@@ -274,21 +276,21 @@ void TIM7_IRQHandler(void){
 void TIM1_config(void){
    RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;                // zegar taktowany 64MHz - bez dzielnika
    TIM1->PSC = 16000-1;                               // Ustawienie prescalera timera 64MHz/16k = 4k
-   TIM1->ARR = 4000;                                  // 4kHz -> 4000 impulsow na 1s, a wiec aby okres licznika byl na 2s trzeba wstawic 8000
+   TIM1->ARR = 15500;                                  // 4kHz -> 4000 impulsow na 1s, a wiec aby okres licznika byl na 2s trzeba wstawic 8000
    TIM1->DIER |= TIM_DIER_UIE;                        // Update interrupt enabled
    NVIC_SetPriority(TIM1_UP_TIM16_IRQn,1);            // Ustawienie priorytetu licznika TIM1
    NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);                // Wlaczenie przerwania
    if (EXTI0_flag != 1){ 
       // konfigracja kanalow CC1, CC2, CC3
       //konfiguracja kanalu CC1 TIM1
-      TIM1->CCR1 =5000;
+      TIM1->CCR1 =3500;
       TIM1->DIER |= TIM_DIER_CC1IE;
       //konfiguracja kanalu CC2 TIM1
-      TIM1->CCR2 =2000;
+      TIM1->CCR2 =10000;
       TIM1->DIER |= TIM_DIER_CC2IE;
       //konfiguracja kanalu CC3 TIM1
-      TIM1->CCR3 =6000;
-      TIM1->DIER |= TIM_DIER_CC3IE;
+     TIM1->CCR3 =6000;
+     TIM1->DIER |= TIM_DIER_CC3IE;
       NVIC_SetPriority(TIM1_CC_IRQn,2);                  // ustawienie priorytetu kanalow licznika TIM1
       NVIC_EnableIRQ(TIM1_CC_IRQn);                      // wlaczenie przerwania od kanalow
       
@@ -300,6 +302,7 @@ void TIM1_config(void){
 }
 
 void TIM1_UP_TIM16_IRQHandler(void){ 
+    
    static short k=2;
    if (EXTI0_flag == 1){
       
@@ -323,7 +326,11 @@ void TIM1_UP_TIM16_IRQHandler(void){
             k++;
          }
          k>3 ? k=2 : k ;
+
          TIM1->SR &= ~TIM_SR_UIF;                        // Czyszczenie flagi glownego przerwania TIM1 
+
+          k>3 ? k=2 : k ;
+         TIM1->SR &= ~TIM_SR_UIF;  
       }
    }   
 }
@@ -333,7 +340,7 @@ void TIM1_CC_IRQHandler(void){
    static short p1=2;
    static short p2=2;
    static short p3=2;
-   
+         volatile uint32_t rejestr = TIM1->SR;
       if(((TIM1->SR) & TIM_SR_CC1IF) == 0x2){            // sprawdzenie czy przerwanie wywolujace funkcje pochodzi od CC1
          if (p1%2 ==0){      
             GPIOE->ODR |= (uint16_t)Pin_15;

@@ -2,7 +2,7 @@ SET PATH=C:\Keil_v5\ARM\ARMCLANG\Bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\S
 SET CPU_TYPE=STM32F303VCTx
 SET CPU_VENDOR=STMicroelectronics
 SET UV2_TARGET=Target 1
-SET CPU_CLOCK=0x007A1200
+SET CPU_CLOCK=0x03D09000
 "C:\Keil_v5\ARM\ARMCLANG\Bin\ArmClang.exe" @".\objects\main.__i"
 "C:\Keil_v5\ARM\ARMCLANG\Bin\ArmClang.exe" @".\objects\startup_stm32f303xc._ac"
 "C:\Keil_v5\ARM\ARMCLANG\Bin\ArmClang.exe" @".\objects\system_stm32f3xx.__i"
