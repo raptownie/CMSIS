@@ -31,6 +31,7 @@ void TIM1_UP_TIM16_IRQHandler(void);
 void TIM1_CC_IRQHandler(void);
 void EXTI0_config(void);
 void EXTI0_IRQHandler(void);
+void Debouncing_SW_LPF (void);
 
 // deklaracje zmiennych
 static uint8_t EXTI0_flag;                            //flaga wykorzystywana do konfiguracji Timera 1 - przerwania od przycisku PA0 - exti0
@@ -48,7 +49,7 @@ int main()
    
    // *** TIM1 - licznik advanced, TIM7 - licznik basic (miganie dioda) ***
    //TIM7_config();
-   TIM1_config();
+   //TIM1_config();
 
    // *** Przycisk (PA0) miganie diodami - nieblokujace***
    //EXTI0_config();
@@ -61,9 +62,11 @@ int main()
    //GPIO_Kolko();  
    while (1)
    {  
-     GPIOE->ODR ^= (uint16_t)Pin_10;
+     //GPIOE->ODR ^= (uint16_t)Pin_10;
 
-      delay_ms(300);
+     // delay_ms(300);
+      
+      Debouncing_SW_LPF();
       
      // GPIO_zPrzyciskiem();      
    }
@@ -289,8 +292,8 @@ void TIM1_config(void){
       TIM1->CCR2 =10000;
       TIM1->DIER |= TIM_DIER_CC2IE;
       //konfiguracja kanalu CC3 TIM1
-     TIM1->CCR3 =6000;
-     TIM1->DIER |= TIM_DIER_CC3IE;
+      TIM1->CCR3 =6000;
+      TIM1->DIER |= TIM_DIER_CC3IE;
       NVIC_SetPriority(TIM1_CC_IRQn,2);                  // ustawienie priorytetu kanalow licznika TIM1
       NVIC_EnableIRQ(TIM1_CC_IRQn);                      // wlaczenie przerwania od kanalow
       
@@ -340,7 +343,7 @@ void TIM1_CC_IRQHandler(void){
    static short p1=2;
    static short p2=2;
    static short p3=2;
-         volatile uint32_t rejestr = TIM1->SR;
+
       if(((TIM1->SR) & TIM_SR_CC1IF) == 0x2){            // sprawdzenie czy przerwanie wywolujace funkcje pochodzi od CC1
          if (p1%2 ==0){      
             GPIOE->ODR |= (uint16_t)Pin_15;
@@ -401,6 +404,31 @@ void EXTI0_IRQHandler(void){
       TIM1->CR1 |= TIM_CR1_CEN;      
       EXTI->PR |= EXTI_PR_PR0;                     // clearowanie flagi przerwania
    }
+   
+}
+
+void Debouncing_SW_LPF (void){
+   static uint16_t button_pressed = 0;
+   static uint16_t button_unpressed = 0;
+   static uint16_t debounce_value = 500;
+   static uint8_t wait_for_next_press = 0;
+   
+ 
+   if (((GPIOA->IDR) & 0x1 ) == (uint16_t)0x0001){
+      button_pressed++;
+      button_unpressed = 0;
+      if (button_pressed > debounce_value && wait_for_next_press == 0){
+         GPIOE->ODR ^= (uint16_t)Pin_15; 
+         wait_for_next_press = 1;
+         
+      }             
+   } else{
+      button_unpressed++;
+      button_pressed = 0;
+      if (button_unpressed>debounce_value && wait_for_next_press == 1) {         
+         wait_for_next_press =0;
+      }
+   }  
    
 }
 
