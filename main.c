@@ -32,20 +32,32 @@ void TIM1_CC_IRQHandler(void);
 void EXTI0_config(void);
 void EXTI0_IRQHandler(void);
 void Debouncing_SW_LPF (void);
+void GPIO_Init_PWM_TIM1(void);
+void PWM_TIM1_C1_Init(uint32_t ARR_value, uint32_t CCR1_value);
+void Zmiana_PWM_TIM1_Button(void);
+void Zmiana_PWM_TIM1_stopniowo(void);
+void EXTI0_config_PWMButton(void);
 
 // deklaracje zmiennych
 static uint8_t EXTI0_flag;                            //flaga wykorzystywana do konfiguracji Timera 1 - przerwania od przycisku PA0 - exti0
 static volatile uint32_t timer_ms;
-   
+static uint8_t FirstRun_GPIO_Init = 0; 
+static uint8_t FirstRun_GPIO_PWM_Init = 0;
+static uint8_t PWM_temp = 0;
+static uint8_t PWM_status_ON = 0;
+static uint8_t PWM_ARR_value = 100;
+static uint8_t PWM_CCR1_value = 0;
+
+ 
 int main()
 { 
    // *** Wybor zegara ***
-   HSI_with_PLL();   
-   //HSE_with_PLL();                                  //to narazie nie dziala (teoretycznie 72MHz)
+   //HSI_with_PLL();   
+   HSE_with_PLL();                                    //taktowanie 72MHz                              
    //HSI_without_PLL();                               //taktowanie z 8MHz
    
    // *** Inicjalizacja GPIO - ledy + przycisk ***
-   GPIO_Init();
+   //GPIO_Init();
    
    // *** TIM1 - licznik advanced, TIM7 - licznik basic (miganie dioda) ***
    //TIM7_config();
@@ -54,21 +66,22 @@ int main()
    // *** Przycisk (PA0) miganie diodami - nieblokujace***
    //EXTI0_config();
       
-    
-  
-  // while(1);                                          //potrzebne do dzialania przerwan od timera, inaczej program konczy dzialanie nic sie nie dzieje
-   //LEDy_kolo();                                     //noreturn
-   //GPIO_zPrzyciskiem();
-   //GPIO_Kolko();  
+ 
    while (1)
    {  
-     //GPIOE->ODR ^= (uint16_t)Pin_10;
-
-     // delay_ms(300);
+      // *** zabawa z LED ****
+      //LEDy_kolo();                                     //noreturn
+      //GPIO_zPrzyciskiem();
+      //GPIO_Kolko();  
       
-      Debouncing_SW_LPF();
       
-     // GPIO_zPrzyciskiem();      
+      // *** PWM ***
+      //Zmiana_PWM_TIM1_Button();
+      Zmiana_PWM_TIM1_stopniowo();
+      
+      //Debouncing_SW_LPF();
+      
+        
    }
    
 }
@@ -79,6 +92,10 @@ void delay_ms(uint32_t time){
 }
 
 void GPIO_zPrzyciskiem(void){   
+   if (FirstRun_GPIO_Init== 0){
+      GPIO_Init();
+      FirstRun_GPIO_Init = 1;
+   }
    GPIOE->ODR |= (uint16_t)(Pin_11+Pin_15);           //wyjscie PE11 i PE15 ustaw na logiczna 1   
    delay_ms(1000);   
    if (((GPIOA->IDR) & 0x1 ) != (uint16_t)0x0001){    // czy stan niski na PA0?
@@ -96,7 +113,12 @@ void GPIO_zPrzyciskiem(void){
    delay_ms(1000);
 }
 
-void GPIO_Kolko(void){
+void GPIO_Kolko(void){   
+   if (FirstRun_GPIO_Init == 0){
+      GPIO_Init();
+      FirstRun_GPIO_Init = 1;
+   }
+   
    GPIOE->ODR |= (uint32_t)(Pin_15+Pin_14+Pin_13);
    delay_ms(250);
    GPIOE->ODR &= (uint32_t)~Pin_15;
@@ -132,6 +154,11 @@ void GPIO_Kolko(void){
 }
 
 void LEDy_kolo(void){
+   if (FirstRun_GPIO_Init == 0){
+      GPIO_Init();
+      FirstRun_GPIO_Init = 1;
+   }
+   
    uint16_t temp= 0x100;   
    GPIOE->ODR |= temp;   
    while(1){      
@@ -210,29 +237,37 @@ void HSI_with_PLL(void){
 }
 
 void HSE_with_PLL(void){
+
+   RCC->CR |= RCC_CR_HSEBYP;                          
+   RCC->CR |= RCC_CR_HSEON;
    
-   //to narazie nie dziala - brak zewnetrznego sygnalu zegarowego
-   RCC->CR|=0x40000;                                  // RCC->CR |= RCC_CR_HSEBYP;   ok
-   RCC->CFGR &= (uint32_t)~0x2000;                    //RCC->CFGR |= RCC_CFGR_PLLXTPRE_HSE_PREDIV_DIV1;   nok
-   RCC->CR |= 0x1;                                    //RCC->CR |= RCC_CR_HSION;   ok
-   RCC->CFGR |= 0x10000;                              //RCC->CFGR |= RCC_CFGR_PLLSRC_HSE_PREDIV;   ok
-   RCC->CFGR |= 0x1C0000;                             //RCC->CFGR |= RCC_CFGR_PLLMUL9;   ok
-   RCC->CFGR &= (uint32_t)~0x200000;
-   RCC->CR |= 0x1000000;                              //RCC->CR |= RCC_CR_PLLON;   
+   uint16_t i=0;                                      //zmienna pomocnicza - zliczenie cykli po jakim czasie zegar HSE bedzie gotowy 
+   while ((RCC->CR & RCC_CR_HSERDY) != 0x20000) i++;  // oczekiwanie az zordlo HSE bedzie stabilne - zmienna i pokazuje mi jak dlugo trwala 
    
-   RCC->CFGR &= (uint32_t)~0x400000;                  //RCC->CFGR |= RCC_CFGR_USBPRE_DIV1_5;   nok
-   RCC->CFGR &= (uint32_t)~0x800000;                  //RCC->CFGR |= RCC_CFGR_I2SSRC_SYSCLK ;   nok
-   RCC->CFGR |= 0x400;                                //RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;   nok
-   RCC->CFGR &= (uint32_t)~0x300;      
-   RCC->CFGR &= (uint32_t)~0x2000;                    //RCC->CFGR |= RCC_CFGR_PPRE2_DIV1;   nok
-   RCC->CFGR &= (uint32_t)~0x80;                      //RCC->CFGR |= RCC_CFGR_HPRE_DIV1;   nok
+   // konfig pentli PLL
+   RCC->CR &= ~RCC_CR_PLLON; 
+   RCC->CFGR |= RCC_CFGR_PLLXTPRE_HSE_PREDIV_DIV1; 
+   RCC->CFGR |= RCC_CFGR_PLLSRC_HSE_PREDIV;
+   RCC->CFGR |= RCC_CFGR_PLLMUL9;   
+   RCC->CR |= RCC_CR_PLLON;
+   
+   uint16_t w=0;
+   while ((RCC->CR & RCC_CR_PLLRDY) != 0x2000000) w++;
+   
+   //Ustawienie zegarow APB1, APB2, USB, I2C, SYSCLK
+   RCC->CFGR |= RCC_CFGR_USBPRE_DIV1_5;
+   RCC->CFGR |= RCC_CFGR_I2SSRC_SYSCLK ;
+   RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
+   RCC->CFGR |= RCC_CFGR_PPRE2_DIV1;
+   RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
    
    //flash ustawienie opoznienia 2 cykli
-   FLASH->ACR|= 0x2;
-   FLASH->ACR &= (uint16_t)~0x5;
+   FLASH->ACR |= FLASH_ACR_LATENCY_1;
+  // FLASH->ACR|= 0x2;
+  // FLASH->ACR &= (uint16_t)~0x5;
    
-   RCC->CFGR |= 0x2;                                  //RCC->CFGR |= RCC_CFGR_SW_PLL;   ok
-   RCC->CFGR &= (uint32_t)~0x1;
+   //Wlaczenie sygnalu z PLL jako glownego zrodla taktowania
+   RCC->CFGR |= RCC_CFGR_SW_PLL;
    SysTick_Config(72000000/1000);
    
 }
@@ -245,11 +280,14 @@ void TIM7_config(void){
    CK_INT - Internal clock source dla HSI 64Mhz APB1/2 jest 32MHz
    
    */
+   if (FirstRun_GPIO_Init == 0){
+      GPIO_Init();
+      FirstRun_GPIO_Init = 1;
+   }
    RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;                // podlaczenie zegara pod TIM7
-   TIM7->PSC = 8000-1;                                // dzielnik ustawiony na 8000 - 64MHz/8000=8kHz
-//   TIM7->CNT = 0x20000;                             // ??????? co robi ten rejestr?
-   TIM7->ARR =40000;                                  // 8kHz -8 tys impulsow na 1 sekunde - przerwanie co 5s to 8000*5 =40k
-   TIM7->DIER |= 0x1;                                 // Update interrupt enabled
+   TIM7->PSC = 16000-1;                                // dzielnik ustawiony na 8000 - 64MHz/8000=8kHz
+   TIM7->ARR = 6000;                                  // 8kHz -8 tys impulsow na 1 sekunde - przerwanie co 5s to 8000*5 =40k
+   TIM7->DIER |= TIM_DIER_UIE;                                 // Update interrupt enabled
    NVIC_SetPriority(TIM7_IRQn,1);   
    NVIC_EnableIRQ(TIM7_IRQn);
    TIM7->CR1 |= TIM_CR1_CEN;
@@ -257,8 +295,9 @@ void TIM7_config(void){
    }
 
 void TIM7_IRQHandler(void){
+   /*
   static short k;
-  
+   
    if (k%2 ==0){
       
       GPIOE->ODR |= (uint16_t)Pin_13;
@@ -271,15 +310,22 @@ void TIM7_IRQHandler(void){
 
       k++;
    }
-   k==2 ? k=2 : k ;
-   TIM7->SR &= (uint16_t)~0x1;                        // clearowanie flagi przerwania
+   k>3 ? k=2 : k ;
+   */
+   GPIOE->ODR ^= (uint16_t)Pin_13;
+   TIM7->SR &= ~TIM_CR1_CEN;                        // clearowanie flagi przerwania
   
 }   
 
 void TIM1_config(void){
+   if (FirstRun_GPIO_Init == 0){
+      GPIO_Init();
+      FirstRun_GPIO_Init = 1;
+   }
+   
    RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;                // zegar taktowany 64MHz - bez dzielnika
    TIM1->PSC = 16000-1;                               // Ustawienie prescalera timera 64MHz/16k = 4k
-   TIM1->ARR = 15500;                                  // 4kHz -> 4000 impulsow na 1s, a wiec aby okres licznika byl na 2s trzeba wstawic 8000
+   TIM1->ARR = 13500;                                  // 4kHz -> 4000 impulsow na 1s, a wiec aby okres licznika byl na 2s trzeba wstawic 8000
    TIM1->DIER |= TIM_DIER_UIE;                        // Update interrupt enabled
    NVIC_SetPriority(TIM1_UP_TIM16_IRQn,1);            // Ustawienie priorytetu licznika TIM1
    NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);                // Wlaczenie przerwania
@@ -305,7 +351,7 @@ void TIM1_config(void){
 }
 
 void TIM1_UP_TIM16_IRQHandler(void){ 
-    
+     
    static short k=2;
    if (EXTI0_flag == 1){
       
@@ -315,7 +361,7 @@ void TIM1_UP_TIM16_IRQHandler(void){
       EXTI->PR |= EXTI_PR_PR0;
       TIM1->SR &= ~TIM_SR_UIF; 
       TIM1->CR1 &= ~TIM_CR1_CEN;
-      
+  
    }else{
       if(((TIM1->SR) & 0x1) == 0x1){
   
@@ -343,7 +389,7 @@ void TIM1_CC_IRQHandler(void){
    static short p1=2;
    static short p2=2;
    static short p3=2;
-
+   volatile uint32_t rejestry = TIM1->SR;
       if(((TIM1->SR) & TIM_SR_CC1IF) == 0x2){            // sprawdzenie czy przerwanie wywolujace funkcje pochodzi od CC1
          if (p1%2 ==0){      
             GPIOE->ODR |= (uint16_t)Pin_15;
@@ -398,11 +444,17 @@ void EXTI0_config(void){
    TIM1_config();
 }
 
-void EXTI0_IRQHandler(void){  
-   if((EXTI->PR & EXTI_PR_PR0) == EXTI_PR_PR0){     //sprawdzenie czy zródlem przerwania jest EXTI0
-      // dzialanie nieblokujace z wykorzystaniem licznika TIM1 
+void EXTI0_IRQHandler(void){ 
+   // dzialanie nieblokujace z wykorzystaniem licznika TIM1 
+   if(((EXTI->PR & EXTI_PR_PR0) == EXTI_PR_PR0) && PWM_status_ON == 0 ){     //sprawdzenie czy zródlem przerwania jest EXTI0
       TIM1->CR1 |= TIM_CR1_CEN;      
       EXTI->PR |= EXTI_PR_PR0;                     // clearowanie flagi przerwania
+   }
+   //Przycisk ktory zmienia ustawienia PWM
+   if(((EXTI->PR & EXTI_PR_PR0) == EXTI_PR_PR0) && PWM_status_ON == 1){     //sprawdzenie czy zródlem przerwania jest EXTI0
+      PWM_temp +=(PWM_ARR_value/4);
+      if (PWM_temp >=PWM_ARR_value) PWM_temp=0; 
+      EXTI->PR |= EXTI_PR_PR0;
    }
    
 }
@@ -428,7 +480,77 @@ void Debouncing_SW_LPF (void){
       if (button_unpressed>debounce_value && wait_for_next_press == 1) {         
          wait_for_next_press =0;
       }
-   }  
+   }     
+}
+
+void GPIO_Init_PWM_TIM1(void){
+   RCC->AHBENR |= RCC_AHBENR_GPIOEEN;
+   GPIOE->MODER |= 0x80000;       // alternate func enabled PE9
+   GPIOE->AFR[1] |= 0x20;          // ustawienie AF2 dla PE9
+}
+
+void PWM_TIM1_C1_Init(uint32_t ARR_value, uint32_t CCR1_value){
+
+   GPIO_Init_PWM_TIM1();
+   
+   // konfiguracja na podstawie reference manual 20.3.11 PWM mode  str 535
+   RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;                // zegar taktowany 72MHz - bez dzielnika
+
+  // TIM1->PSC = 100-1;                               // Tutaj prescaler nie jest potrzebny - im wieksza czestotliwosc tym plynniejsze przejscie - niezauwazalne dla ludzkiego oka
+   TIM1->ARR = ARR_value;                             // ustawienie okresu
+   TIM1->CCR1 = CCR1_value;                           // wypelnienie impulsu
+   TIM1->CCMR1 |= 0x60;                               // 1100: Combined PWM mode 1 - OC1REF has the same behavior as in PWM mode 1.    
+
+   // TIM BDTR - break and dead-time register
+   TIM1->BDTR |= TIM_BDTR_MOE;                        // 1: OC and OCN outputs are enabled if their respective enable bits are set (CCxE, CCxNE in TIMx_CCER register).
+   TIM1->CCER |= TIM_CCER_CC1E;                       //1: On - OC1 signal is output on the corresponding output pin depending on MOE, OSSI, OSSR, OIS1, OIS1N and CC1NE bits.
+   //TIM1->CCER |= TIM_CCER_CC1NE;
+   TIM1->BDTR |= TIM_BDTR_OSSR;                        
+
+   TIM1->CR1 |= TIM_CR1_CEN;                          // Wlaczenie licznika TIM1
+}
+
+void Zmiana_PWM_TIM1_Button(void){
+   if (FirstRun_GPIO_PWM_Init== 0) {
+      PWM_TIM1_C1_Init(PWM_ARR_value, PWM_CCR1_value);
+      EXTI0_config_PWMButton();
+      FirstRun_GPIO_PWM_Init =1;
+   }   
+   TIM1->CCR1=PWM_temp;
+}
+
+void Zmiana_PWM_TIM1_stopniowo(void){
+   if (FirstRun_GPIO_PWM_Init== 0) {
+      PWM_TIM1_C1_Init(PWM_ARR_value, PWM_CCR1_value);
+      FirstRun_GPIO_PWM_Init =1;
+   }   
+   static uint8_t direction=1;
+   delay_ms(30);
+   
+   //zmiana kierunku
+   if (PWM_temp >= PWM_ARR_value|| PWM_temp ==0){
+      direction++;
+   }
+   if (direction%2 == 0) {
+      TIM1->CCR1=++PWM_temp;
+    
+   } else{
+      TIM1->CCR1=--PWM_temp;
+
+   }
+   
    
 }
+
+void EXTI0_config_PWMButton(void){
+   // konfiguracja PA0 jako przerwanie zewnerzne
+   SYSCFG->EXTICR[1] |= SYSCFG_EXTICR1_EXTI0_PA;   //podlaczenie PA0 do lini EXTI0; EXTICR1,EXTICR2... zdefiniowane sa jako tablice, dlatego taki zapis
+   EXTI->IMR |= EXTI_IMR_MR0;                      // IRM - interrupt mask register - wlaczenie maskowania dla lini EXTI0 
+   EXTI->RTSR |= EXTI_RTSR_RT0;                    // RTSR - Raising Trigger Selection register
+   NVIC_SetPriority(EXTI0_IRQn, 4);
+   NVIC_EnableIRQ(EXTI0_IRQn);
+   PWM_status_ON=1;
+
+}
+
 
