@@ -388,10 +388,62 @@
               <FileType>1</FileType>
               <FilePath>.\main.c</FilePath>
             </File>
+            <File>
+              <FileName>UserSystemInit.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Cfiles\UserSystemInit.c</FilePath>
+            </File>
+            <File>
+              <FileName>Timers.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Cfiles\Timers.c</FilePath>
+            </File>
+            <File>
+              <FileName>EXTI.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Cfiles\EXTI.c</FilePath>
+            </File>
+            <File>
+              <FileName>GPIO_LEDS_Buttons.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Cfiles\GPIO_LEDS_Buttons.c</FilePath>
+            </File>
+            <File>
+              <FileName>ADC_DMA.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Cfiles\ADC_DMA.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>Headers</GroupName>
+          <Files>
+            <File>
+              <FileName>UserSystemInit.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Headers\UserSystemInit.h</FilePath>
+            </File>
+            <File>
+              <FileName>Timers.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Headers\Timers.h</FilePath>
+            </File>
+            <File>
+              <FileName>EXTI.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Headers\EXTI.h</FilePath>
+            </File>
+            <File>
+              <FileName>GPIO_LEDS_Buttons.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Headers\GPIO_LEDS_Buttons.h</FilePath>
+            </File>
+            <File>
+              <FileName>ADC_DMA.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Headers\ADC_DMA.h</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>::CMSIS</GroupName>
