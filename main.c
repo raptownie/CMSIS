@@ -24,7 +24,7 @@ int main()
 
    // *** Przycisk (PA0) miganie diodami - nieblokujace***
    //EXTI0_config();
-      
+      SPI_Gyroskop_Config();
  //ADC2_Init();
    //ADC2_with_DMA_Init();
    while (1)
@@ -42,7 +42,7 @@ int main()
       //Zmiana_PWM_TIM1_Button();
       //Zmiana_PWM_TIM1_stopniowo();
       
-      Debouncing_SW_LPF();
+      //Debouncing_SW_LPF();
       
         
    }

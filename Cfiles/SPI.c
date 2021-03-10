@@ -14,7 +14,7 @@ void SPI_Gyroskop_Config(void){
    RCC->AHBENR |= RCC_AHBENR_GPIOEEN;
    GPIOE->MODER |= GPIO_MODER_MODER3_0;   // PE3 CS - set as aoutput
    GPIOE->OTYPER &= ~GPIO_OTYPER_OT_3;    // PE3 output push pull
-   GPIOE->ODR &= ~(uint32_t)Pin_3;        // 0 na PE3
+   GPIOE->ODR |= (uint32_t)Pin_3;
    
    //konfiguracja SPI
    RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
@@ -24,9 +24,36 @@ void SPI_Gyroskop_Config(void){
    SPI1->CR1 &= ~SPI_CR1_RXONLY;          // full duplex
    SPI1->CR1 &= ~SPI_CR1_LSBFIRST;        // set MSB frame format (most significant bit)
    SPI1->CR1 |= SPI_CR1_MSTR;             // master configuration
+   SPI1->CR1 |= SPI_CR1_SSM;              // software slave managment
    
-   SPI1->CR2 |= SPI_CR2_DS_1 | SPI_CR2_DS_2; // data length transfer 7 bit 0110;
+   SPI1->CR2 |= SPI_CR2_DS_0 | SPI_CR2_DS_1 | SPI_CR2_DS_2; // data length transfer 8 bit 0111;
    SPI1->CR2 |= SPI_CR2_SSOE;             //1: SS output is enabled in master mode and when the SPI interface is enabled. 
    SPI1->CR2 &= ~SPI_CR2_FRF;             // Frame format  - 0: SPI Motorola mode   ????? !!brak info w dokumentacji!!
+   SPI1->CR2 |= SPI_CR2_FRXTH;            //FIFO reception threshold
+   
+   SPI1->CR1 |= SPI_CR1_SPE;              //SPI enabled
+   
+   GPIOE->ODR &= ~(uint32_t)Pin_3;        // Slave Selector SS 
+   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   SPI1->DR |= 0x8F;                      // WHO I AM - adres  0001111b (0x0F) + 0x80 (read bit)
+
+
+  //testy
+  
+   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   SPI1->DR |= 0x8F;
+   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   SPI1->DR |= 0x8F;
+   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   SPI1->DR |= 0x8F;
+   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   SPI1->DR |= 0x8F;
+   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   SPI1->DR |= 0x8F;
+   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   
              
 }
