@@ -413,6 +413,11 @@
               <FileType>1</FileType>
               <FilePath>.\Cfiles\ADC_DMA.c</FilePath>
             </File>
+            <File>
+              <FileName>SPI.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Cfiles\SPI.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -442,6 +447,11 @@
               <FileName>ADC_DMA.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\Headers\ADC_DMA.h</FilePath>
+            </File>
+            <File>
+              <FileName>SPI.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Headers\SPI.h</FilePath>
             </File>
           </Files>
         </Group>

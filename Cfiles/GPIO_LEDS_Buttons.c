@@ -84,17 +84,22 @@ void LEDy_kolo(void){
 }
 
 void Debouncing_SW_LPF (void){
+   
    static uint16_t button_pressed = 0;
    static uint16_t button_unpressed = 0;
    static uint16_t debounce_value = 500;
    static uint8_t wait_for_next_press = 0;
+      if (FirstRun_GPIO_Init == 0){
+      GPIO_Init();
+      FirstRun_GPIO_Init = 1;
+   }
    
  
    if (((GPIOA->IDR) & 0x1 ) == (uint16_t)0x0001){
       button_pressed++;
       button_unpressed = 0;
       if (button_pressed > debounce_value && wait_for_next_press == 0){
-         GPIOE->ODR ^= (uint16_t)Pin_15; 
+         GPIOE->ODR ^= ((uint16_t)Pin_15 | (uint16_t)Pin_14); 
          wait_for_next_press = 1;         
       }             
    } else{

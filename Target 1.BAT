@@ -9,6 +9,7 @@ SET CPU_CLOCK=0x03D09000
 "C:\Keil_v5\ARM\ARMCLANG\Bin\ArmClang.exe" @".\objects\exti.__i"
 "C:\Keil_v5\ARM\ARMCLANG\Bin\ArmClang.exe" @".\objects\gpio_leds_buttons.__i"
 "C:\Keil_v5\ARM\ARMCLANG\Bin\ArmClang.exe" @".\objects\adc_dma.__i"
+"C:\Keil_v5\ARM\ARMCLANG\Bin\ArmClang.exe" @".\objects\spi.__i"
 "C:\Keil_v5\ARM\ARMCLANG\Bin\ArmClang.exe" @".\objects\startup_stm32f303xc._ac"
 "C:\Keil_v5\ARM\ARMCLANG\Bin\ArmClang.exe" @".\objects\system_stm32f3xx.__i"
 "C:\Keil_v5\ARM\ARMCLANG\Bin\ArmLink" --Via ".\Objects\SwiecenieDioda.lnp"

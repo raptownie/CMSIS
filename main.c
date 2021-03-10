@@ -6,6 +6,7 @@
 #include "Headers/EXTI.h"
 #include "Headers/GPIO_LEDS_Buttons.h"
 #include "Headers/ADC_DMA.h"
+#include "Headers/SPI.h"
  
 int main()
 { 
@@ -15,7 +16,7 @@ int main()
    //HSI_without_PLL();                               //taktowanie z 8MHz
    
    // *** Inicjalizacja GPIO - ledy + przycisk ***
-   //GPIO_Init();
+  // GPIO_Init();
    
    // *** TIM1 - licznik advanced, TIM7 - licznik basic (miganie dioda) ***
    //TIM7_config();
@@ -25,23 +26,23 @@ int main()
    //EXTI0_config();
       
  //ADC2_Init();
-   ADC2_with_DMA_Init();
+   //ADC2_with_DMA_Init();
    while (1)
    {  
-      delay_ms(100);
+      //delay_ms(100);
         //ADC2_Raw_value = ADC2->DR;
       // *** zabawa z LED ****
       //LEDy_kolo();                                     //noreturn
       //GPIO_zPrzyciskiem();
       //GPIO_Kolko();  
-      ADC_control_PWM_Led();
+      //ADC_control_PWM_Led();
        
       
       // *** PWM ***
       //Zmiana_PWM_TIM1_Button();
       //Zmiana_PWM_TIM1_stopniowo();
       
-      //Debouncing_SW_LPF();
+      Debouncing_SW_LPF();
       
         
    }

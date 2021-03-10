@@ -4,6 +4,8 @@
 #include "stm32f3xx.h" 
 
 #define HSI_Clock 8000000        // bez PLL
+#define Pin_3 0x8
+#define Pin_5 0x20
 #define Pin_8 0x100
 #define Pin_9 0x200
 #define Pin_10 0x400
