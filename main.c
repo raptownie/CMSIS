@@ -24,7 +24,7 @@ int main()
    // *** Przycisk (PA0) miganie diodami - nieblokujace***
    //EXTI0_config();
       
-// ADC2_Init();
+ //ADC2_Init();
    ADC2_with_DMA_Init();
    while (1)
    {  
