@@ -26,9 +26,15 @@ int main()
    //EXTI0_config();
       SPI_Gyroskop_Config();
  //ADC2_Init();
-   //ADC2_with_DMA_Init();
+   //ADC2_with_DMA_Init(); 
+   
    while (1)
    {  
+         SPI_L3GD2_Read = Read_SPI(0x0F);   
+
+      
+      
+      
       //delay_ms(100);
         //ADC2_Raw_value = ADC2->DR;
       // *** zabawa z LED ****

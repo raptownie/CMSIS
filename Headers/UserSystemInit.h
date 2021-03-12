@@ -25,7 +25,7 @@ static uint16_t PWM_ARR_value = 2047;
 static uint8_t PWM_CCR1_value = 0;
 static uint32_t ADC2_Raw_value=0;
 static float ADC2_Voltage=0;
-static uint8_t SPI_L3GD2_Rx;
+static uint32_t SPI_L3GD2_Read;
 
 void GPIO_Init(void);
 void SysTick_Init(void);

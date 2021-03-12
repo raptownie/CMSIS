@@ -22,38 +22,109 @@ void SPI_Gyroskop_Config(void){
    SPI1->CR1 |= SPI_CR1_CPHA;             // jak wynika z doc L3GD20 musi byc opoznienie danych o jeden cykl zegarowy
    SPI1->CR1 |= SPI_CR1_CPOL;             //polaryzacja zegara SCK  - dokumentacja L3GD20 mowi ze musi byc stan wysoki w IDLE
    SPI1->CR1 &= ~SPI_CR1_RXONLY;          // full duplex
+  // SPI1->CR1 |= SPI_CR1_BIDIMODE;       // half duplex
    SPI1->CR1 &= ~SPI_CR1_LSBFIRST;        // set MSB frame format (most significant bit)
    SPI1->CR1 |= SPI_CR1_MSTR;             // master configuration
-   SPI1->CR1 |= SPI_CR1_SSM;              // software slave managment
+  // SPI1->CR1 |= SPI_CR1_SSM;              // software slave managment
    
    SPI1->CR2 |= SPI_CR2_DS_0 | SPI_CR2_DS_1 | SPI_CR2_DS_2; // data length transfer 8 bit 0111;
    SPI1->CR2 |= SPI_CR2_SSOE;             //1: SS output is enabled in master mode and when the SPI interface is enabled. 
    SPI1->CR2 &= ~SPI_CR2_FRF;             // Frame format  - 0: SPI Motorola mode   ????? !!brak info w dokumentacji!!
-   SPI1->CR2 |= SPI_CR2_FRXTH;            //FIFO reception threshold
+   SPI1->CR2 |= SPI_CR2_FRXTH;            //FIFO reception threshold 8bit
    
-   SPI1->CR1 |= SPI_CR1_SPE;              //SPI enabled
+   //SPI1->CR1 |= SPI_CR1_SPE;              //SPI enabled
    
    GPIOE->ODR &= ~(uint32_t)Pin_3;        // Slave Selector SS 
-   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   
+   /*
+   SPI_L3GD2_Read = Read_SPI(0x0F);
+   
+   uint8_t SPI_L3GD2_CTRL_REG1= Read_SPI(0x20);
+   uint8_t SPI_L3GD2_Status_reg = Read_SPI(0x27);
+   while (SPI_L3GD2_Status_reg == 0){
+      SPI_L3GD2_Status_reg = Read_SPI(0x27);
+   }
+   
+  uint8_t SPI_L3GD2_XL = Read_SPI(0x28);
+   uint8_t SPI_L3GD2_XH = Read_SPI(0x29);
+   uint8_t SPI_L3GD2_YL = Read_SPI(0x2A);
+    uint8_t SPI_L3GD2_YH = Read_SPI(0x2B);
+    uint8_t SPI_L3GD2_ZL = Read_SPI(0x2C);
+    uint8_t SPI_L3GD2_ZH = Read_SPI(0x2D);
+*/
+   /*
    SPI1->DR |= 0x8F;                      // WHO I AM - adres  0001111b (0x0F) + 0x80 (read bit)
-
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI1->CR1 &= ~SPI_CR1_SPE; 
+   */
+   /*
+   // wlaczenie X,Y,Z
+   SPI1->DR |= 0x20;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI1->DR |= 0x7;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   SPI_L3GD2_Rx = (uint32_t)SPI1->DR;
+   */
+   
 
   //testy
-  
+  /*
    SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
-   SPI1->DR |= 0x8F;
-   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
-   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   SPI1->DR = 0x8F;
    SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
    SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
-   SPI1->DR |= 0x8F;
    SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
-   SPI1->DR |= 0x8F;
    SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
    SPI1->DR |= 0x8F;
    SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
    SPI1->DR |= 0x8F;
    SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
-   
+   SPI1->DR |= 0x8F;
+   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   SPI1->DR |= 0x8F;
+   SPI_L3GD2_Rx = (uint8_t)SPI1->DR;
+   */
              
 }
+
+
+//ta funkcja jeszcze nie dziala
+void Write_SPI(uint8_t reg, uint8_t data){
+   SPI1->CR1 |= SPI_CR1_SPE;    
+   SPI1->DR = reg;
+   while (!(SPI1->SR & SPI_SR_TXE));
+   SPI1->DR = data;
+   while (!(SPI1->SR & SPI_SR_TXE));
+   while (SPI1->SR & SPI_SR_BSY);
+   while (!(SPI1->SR & SPI_SR_OVR));
+   SPI1->CR1 &= ~SPI_CR1_SPE;
+}
+
+uint8_t Read_SPI(uint8_t reg){
+   SPI1->CR1 |= SPI_CR1_SPE;           // wlaczamy SPI
+   while (!(SPI1->SR & SPI_SR_TXE));      // sprawdzenie czy kolejka TX jest pusta
+   SPI1->DR = (0xC0|reg);              // trzeba wlaczyc BIT 8 i 7  (8-read, 7-When 0 do not increment address; when 1 increment address in multiple reading.
+   while (!(SPI1->SR & SPI_SR_TXE));   // czekamy az zakonczy wysylanie
+   while (SPI1->SR & SPI_SR_BSY);      // sprawdzamy czy SPI jest zajety
+   SPI1->DR= 0x00;                     // dummy read
+   while(!(SPI1->SR & SPI_SR_RXNE));   // czekamy na odpowiedz
+   volatile uint8_t rd = SPI1->DR;     // za pierwszym razem odczytuje FF, wiec dodalem odczyt przed wlasciwym odczytem zeby zdjac z kolejki FIFO  
+   while(!(SPI1->SR & SPI_SR_RXNE));   // znowu sprawdzamy czy jest jakas dana do odczytu w buforze
+   uint8_t r= (uint8_t)SPI1->DR;       // odczyt wlasciwy
+   SPI1->CR1 &= ~SPI_CR1_SPE;          //wylaczamy spi
+   return r;
+}
+
