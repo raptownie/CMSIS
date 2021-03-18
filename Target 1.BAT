@@ -1,4 +1,4 @@
-SET PATH=C:\Keil_v5\ARM\ARMCLANG\Bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files (x86)\STMicroelectronics\STM32 ST-LINK Utility\ST-LINK Utility;C:\MinGW\bin;C:\Users\Kamil\AppData\Local\Microsoft\WindowsApps;C:\MinGW\bin;
+SET PATH=C:\Keil_v5\ARM\ARMCLANG\Bin;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files (x86)\STMicroelectronics\STM32 ST-LINK Utility\ST-LINK Utility;C:\MinGW\bin;C:\Users\Kamil\AppData\Local\Microsoft\WindowsApps;C:\MinGW\bin;
 SET CPU_TYPE=STM32F303VCTx
 SET CPU_VENDOR=STMicroelectronics
 SET UV2_TARGET=Target 1

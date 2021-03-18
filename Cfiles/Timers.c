@@ -1,5 +1,7 @@
 #include "../Headers/Timers.h"
 
+
+
 void TIM7_config(void){
    /* 
    Notatki basic Timer
@@ -8,6 +10,8 @@ void TIM7_config(void){
    CK_INT - Internal clock source dla HSI 64Mhz APB1/2 jest 32MHz
    
    */
+   
+   
    if (FirstRun_GPIO_Init == 0){
       GPIO_Init();
       FirstRun_GPIO_Init = 1;
@@ -185,12 +189,19 @@ void Zmiana_PWM_TIM1_Button(void){
 }
 
 void Zmiana_PWM_TIM1_stopniowo(void){
+   static uint16_t Tab_PWM_temp[100];
    if (FirstRun_GPIO_PWM_Init== 0) {
       PWM_TIM1_C1_Init(PWM_ARR_value, PWM_CCR1_value);
+      static uint16_t exponenta = 0;
+      for (int i=0; Tab_PWM_temp[i]<=PWM_ARR_value; i++, exponenta++)
+         Tab_PWM_temp[i]=4*(uint16_t)(exponenta*exponenta);
+         
+      
       FirstRun_GPIO_PWM_Init =1;
    }   
+
    static uint8_t direction=1;
-   static float exponenta = 1.0;
+   static uint8_t p=0;
    delay_ms(30);
    
    //zmiana kierunku
@@ -198,13 +209,13 @@ void Zmiana_PWM_TIM1_stopniowo(void){
       direction++;
    }
    if (direction%2 == 0) {
-      exponenta += 1.1f;
-      PWM_temp= (uint8_t)(4.0f*powf(exponenta, 2.0f));
+      p++;
+      PWM_temp = Tab_PWM_temp[p];
       TIM1->CCR1=PWM_temp;
     
    } else{
-      exponenta -= 1.1f;
-      PWM_temp= (uint8_t)(4.0f*powf(exponenta, 2.0f));
+       p--;
+      PWM_temp = Tab_PWM_temp[p];
       TIM1->CCR1=PWM_temp;
    }   
 }

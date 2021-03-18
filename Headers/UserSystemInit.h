@@ -1,7 +1,7 @@
 #ifndef _UserSystemInit
 #define _UserSystemInit
 
-#include "stm32f3xx.h" 
+#include "stm32f3xx.h"
 
 #define HSI_Clock 8000000        // bez PLL
 #define Pin_3 0x8
@@ -15,17 +15,8 @@
 #define Pin_14 0x4000
 #define Pin_15 0x8000
 
-static volatile uint32_t timer_ms;
-static uint8_t EXTI0_flag; 
-static uint8_t FirstRun_GPIO_PWM_Init = 0;
-static uint8_t FirstRun_GPIO_Init = 0; 
-static uint8_t PWM_status_ON = 0;
-static uint16_t PWM_temp = 0;
-static uint16_t PWM_ARR_value = 2047;
-static uint8_t PWM_CCR1_value = 0;
-static uint32_t ADC2_Raw_value=0;
-static float ADC2_Voltage=0;
-static uint32_t SPI_L3GD2_Read;
+
+extern volatile uint32_t timer_ms;
 
 void GPIO_Init(void);
 void SysTick_Init(void);

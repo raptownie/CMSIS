@@ -43,7 +43,7 @@ void ADC1_2_IRQHandler(void){
 
 void ADC_control_PWM_Led (void){
    
-   static float ADC2_Voltage;
+   //static float ADC2_Voltage;
    ADC2_Voltage = ((float)ADC2_Raw_value*3.3f)/4096.0f;     // przeliczenie wartosci RAW na napiecie   
    TIM1->CCR1= (uint32_t)((PWM_ARR_value *ADC2_Voltage)/3.3f);        // przeliczenie zmierzonego napiecia na procentowa wartosc wzgledem 3.3V   
  
