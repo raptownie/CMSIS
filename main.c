@@ -19,15 +19,20 @@ uint8_t PWM_CCR1_value = 0;
 uint32_t ADC2_Raw_value=0;
 float ADC2_Voltage=0; 
 uint32_t SPI_L3GD2_Read;
-static volatile int8_t SPI_L3GD2_XL;
-static volatile int8_t SPI_L3GD2_XH;
-static volatile int8_t SPI_L3GD2_YL;
-static volatile int8_t SPI_L3GD2_YH;
-static volatile int8_t SPI_L3GD2_ZL;
-static volatile int8_t SPI_L3GD2_ZH;
-static volatile int16_t X_value;
-static volatile int16_t Y_value;
-static volatile int16_t Z_value;
+
+volatile int8_t SPI_L3GD2_XL;
+volatile int8_t SPI_L3GD2_XH;
+volatile int8_t SPI_L3GD2_YL;
+volatile int8_t SPI_L3GD2_YH;
+volatile int8_t SPI_L3GD2_ZL;
+volatile int8_t SPI_L3GD2_ZH;
+volatile int16_t X_value;
+volatile int16_t Y_value;
+volatile int16_t Z_value;
+
+
+int8_t tab_SPI_L3GD20_XYZ_values[6];
+const uint8_t tab_SPI_L3GD20_XYZ_adress[6]= {0xE8,0xE9,0xEA,0xEB,0xEC,0xED};  // L3GD20 - XL, XH, YL, YH, ZL, ZH
 
 
 int main()
@@ -46,15 +51,18 @@ int main()
 
    // *** Przycisk (PA0) miganie diodami - nieblokujace***
    //EXTI0_config();
-      SPI_Config_for_Gyroskop();
+   //SPI_Config_for_Gyroskop();
+   L3GD20_DMA_Init();
  //ADC2_Init();
    //ADC2_with_DMA_Init(); 
-  L3GD20_Init();
+   //L3GD20_Init();
+  
    while (1){        
+       delay_ms(50); 
       
+   L3GD20_XYZ_Calculate();     
+/*
   
-  
-  delay_ms(50);
    SPI_L3GD2_YL = (int8_t)Read_SPI(0x2A);   
    SPI_L3GD2_YH = (int8_t)Read_SPI(0x2B);   
    Y_value = (int16_t)(SPI_L3GD2_YL |(SPI_L3GD2_YH << 8));
@@ -67,7 +75,7 @@ int main()
    SPI_L3GD2_XH = (int8_t)Read_SPI(0x29);      
    X_value = (int16_t)(SPI_L3GD2_XL | (SPI_L3GD2_XH << 8));  
     // X_value += (SPI_L3GD2_XL << 8);   
-      
+      */
       //delay_ms(100);
         //ADC2_Raw_value = ADC2->DR;
       // *** zabawa z LED ****
@@ -87,6 +95,8 @@ int main()
    }
    
 }
+
+
 
 
 
