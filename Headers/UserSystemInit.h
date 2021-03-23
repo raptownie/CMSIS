@@ -14,7 +14,8 @@
 #define Pin_13 0x2000
 #define Pin_14 0x4000
 #define Pin_15 0x8000
-
+#define Accelerometer_Adress 0x19
+#define Magneto_Adress 0x1E
 
 extern volatile uint32_t timer_ms;
 

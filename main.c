@@ -7,6 +7,7 @@
 #include "Headers/GPIO_LEDS_Buttons.h"
 #include "Headers/ADC_DMA.h"
 #include "Headers/SPI.h"
+#include "Headers/I2C.h"
  
 volatile uint32_t timer_ms;
 uint8_t EXTI0_flag; 
@@ -26,10 +27,24 @@ volatile int8_t SPI_L3GD2_YL;
 volatile int8_t SPI_L3GD2_YH;
 volatile int8_t SPI_L3GD2_ZL;
 volatile int8_t SPI_L3GD2_ZH;
-volatile int16_t X_value;
-volatile int16_t Y_value;
-volatile int16_t Z_value;
+volatile int16_t SPI_L3GD2_X_value;
+volatile int16_t SPI_L3GD2_Y_value;
+volatile int16_t SPI_L3GD2_Z_value;
 
+
+volatile uint8_t Read_value_LSM303DLHC_A;
+volatile int8_t I2C_LSM303DLHC_A_XL;
+volatile int8_t I2C_LSM303DLHC_A_XH;
+volatile int8_t I2C_LSM303DLHC_A_YL;
+volatile int8_t I2C_LSM303DLHC_A_YH;
+volatile int8_t I2C_LSM303DLHC_A_ZL;
+volatile int8_t I2C_LSM303DLHC_A_ZH;
+volatile int16_t I2C_LSM303DLHC_A_X_value;
+volatile int16_t I2C_LSM303DLHC_A_Y_value;
+volatile int16_t I2C_LSM303DLHC_A_Z_value;
+
+
+static volatile uint8_t Read_value_LSM303DLHC_M;
 
 int8_t tab_SPI_L3GD20_XYZ_values[6];
 const uint8_t tab_SPI_L3GD20_XYZ_adress[6]= {0xE8,0xE9,0xEA,0xEB,0xEC,0xED};  // L3GD20 - XL, XH, YL, YH, ZL, ZH
@@ -56,27 +71,26 @@ int main()
  //ADC2_Init();
    //ADC2_with_DMA_Init(); 
    //L3GD20_Init();
-  
+   I2C_LSM303DLHC_Init();
+   I2C_LSM303DLHC_Config_Init();
    while (1){        
        delay_ms(50); 
+   
+   Read_value_LSM303DLHC_A = (uint8_t)I2C_Read(Magneto_Adress,0x32,1);      
+   I2C_Write(Magneto_Adress, 0x0, 0x98,1);   
+   Read_value_LSM303DLHC_A = (uint8_t)I2C_Read(Magneto_Adress,0x31,1); 
+
+
       
+      
+   
+     
+ 
+     
+   I2C_LSM303DLHC_A_Read_XYZ(); 
    L3GD20_XYZ_Calculate();     
-/*
+
   
-   SPI_L3GD2_YL = (int8_t)Read_SPI(0x2A);   
-   SPI_L3GD2_YH = (int8_t)Read_SPI(0x2B);   
-   Y_value = (int16_t)(SPI_L3GD2_YL |(SPI_L3GD2_YH << 8));
-   //Y_value += (SPI_L3GD2_YL << 8);
-   SPI_L3GD2_ZL = (int8_t)Read_SPI(0x2C);  
-   SPI_L3GD2_ZH = (int8_t)Read_SPI(0x2D);   
-   Z_value = (int16_t)(SPI_L3GD2_ZL |(SPI_L3GD2_ZH <<8));
-  // Z_value += (SPI_L3GD2_ZL <<8);
-     SPI_L3GD2_XL = (int8_t)Read_SPI(0x28);     
-   SPI_L3GD2_XH = (int8_t)Read_SPI(0x29);      
-   X_value = (int16_t)(SPI_L3GD2_XL | (SPI_L3GD2_XH << 8));  
-    // X_value += (SPI_L3GD2_XL << 8);   
-      */
-      //delay_ms(100);
         //ADC2_Raw_value = ADC2->DR;
       // *** zabawa z LED ****
       //LEDy_kolo();                                     //noreturn

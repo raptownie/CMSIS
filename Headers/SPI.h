@@ -26,9 +26,9 @@ extern volatile int8_t SPI_L3GD2_YL;
 extern volatile int8_t SPI_L3GD2_YH;
 extern volatile int8_t SPI_L3GD2_ZL;
 extern volatile int8_t SPI_L3GD2_ZH;
-extern volatile int16_t X_value;
-extern volatile int16_t Y_value;
-extern volatile int16_t Z_value;
+extern volatile int16_t SPI_L3GD2_X_value;
+extern volatile int16_t SPI_L3GD2_Y_value;
+extern volatile int16_t SPI_L3GD2_Z_value;
 
 void L3GD20_XYZ_Calculate(void);
 void SPI_Config_for_Gyroskop(void);

@@ -198,15 +198,15 @@ void L3GD20_XYZ_Calculate(void){
    //*** kalkulacja XYZ Gyroskopu, z wykorzystaniem DMA***
    SPI_L3GD2_YL = (int8_t)tab_SPI_L3GD20_XYZ_values[0];   
    SPI_L3GD2_YH = (int8_t)tab_SPI_L3GD20_XYZ_values[1];   
-   Y_value = (int16_t)(SPI_L3GD2_YL |(SPI_L3GD2_YH << 8));
+   SPI_L3GD2_Y_value = (int16_t)(SPI_L3GD2_YL |(SPI_L3GD2_YH << 8));
       
    SPI_L3GD2_ZL = (int8_t)tab_SPI_L3GD20_XYZ_values[2];  
    SPI_L3GD2_ZH = (int8_t)tab_SPI_L3GD20_XYZ_values[3];   
-   Z_value = (int16_t)(SPI_L3GD2_ZL |(SPI_L3GD2_ZH << 8));
+   SPI_L3GD2_Z_value = (int16_t)(SPI_L3GD2_ZL |(SPI_L3GD2_ZH << 8));
   
    SPI_L3GD2_XL = (int8_t)tab_SPI_L3GD20_XYZ_values[4];     
    SPI_L3GD2_XH = (int8_t)tab_SPI_L3GD20_XYZ_values[5];      
-   X_value = (int16_t)(SPI_L3GD2_XL | (SPI_L3GD2_XH << 8)); 
+   SPI_L3GD2_X_value = (int16_t)(SPI_L3GD2_XL | (SPI_L3GD2_XH << 8)); 
   //********************************************************   
 }
 

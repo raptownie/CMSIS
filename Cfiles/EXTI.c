@@ -19,7 +19,7 @@ void EXTI0_IRQHandler(void){
    }
    //Przycisk ktory zmienia ustawienia PWM
    if(((EXTI->PR & EXTI_PR_PR0) == EXTI_PR_PR0) && PWM_status_ON == 1){     //sprawdzenie czy zródlem przerwania jest EXTI0
-      PWM_temp +=(PWM_ARR_value/4);
+      PWM_temp +=(PWM_ARR_value/4); 
       if (PWM_temp >=PWM_ARR_value) PWM_temp=0; 
       EXTI->PR |= EXTI_PR_PR0;
    }   
