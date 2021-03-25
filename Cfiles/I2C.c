@@ -24,8 +24,8 @@ void I2C_LSM303DLHC_Init(void){
    GPIOB->OTYPER |= GPIO_OTYPER_OT_7;
    
    //ustawienie predkosci na najwolniejsza
-   GPIOB->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR6_0;
-   GPIOB->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR7_0;
+   GPIOB->OSPEEDR &= ~GPIO_OSPEEDER_OSPEEDR6_0;
+   GPIOB->OSPEEDR &= ~GPIO_OSPEEDER_OSPEEDR7_0;
    
    //No pullup/pulldown
    GPIOB->PUPDR &= ~GPIO_PUPDR_PUPDR6_0;
@@ -35,7 +35,7 @@ void I2C_LSM303DLHC_Init(void){
       
    //configuracja I2C
    RCC->APB1ENR |= RCC_APB1ENR_I2C1EN;   
-   I2C1->TIMINGR = (uint32_t)0x00200208;     //z wykorzystaniem kalkulatora od ST   
+   I2C1->TIMINGR = (uint32_t)0x00301D28;     //z wykorzystaniem kalkulatora od ST   
    I2C1->CR1 |= I2C_CR1_PE;
 }
 
@@ -46,10 +46,12 @@ void I2C_Write(uint8_t SlaveAdress, uint8_t RegisterToWrite, uint8_t Data, uint8
    I2C1->CR2 &= ~I2C_CR2_RD_WRN;             // ustawiamy WRITE
    I2C1->CR2 |= (uint32_t)((BytesToWrite+1) << 16)  ;//ile bajtow chcemy wgrac (adres + 
    
+   while(I2C1->ISR & I2C_ISR_BUSY);
+   
    I2C1->CR2 |= I2C_CR2_START;
    while (I2C1->CR2 & I2C_CR2_START); 
    
-   while (!(I2C1->ISR & I2C_ISR_TXE));
+   //while (!(I2C1->ISR & I2C_ISR_TXE));
    I2C1->TXDR = RegisterToWrite;
    
    while (!(I2C1->ISR & I2C_ISR_TXE));
@@ -60,19 +62,20 @@ void I2C_Write(uint8_t SlaveAdress, uint8_t RegisterToWrite, uint8_t Data, uint8
    
    I2C1->CR2 |= I2C_CR2_STOP;
    while (I2C1->CR2 & I2C_CR2_STOP);
+   
+   //resetowanie rejestru cr2
    I2C1->CR2 &= ~(uint32_t)((BytesToWrite+1) << 16);         // super wazne bo inaczej powoduje problem przy odczycie; przed tym rejestr CR2
    I2C1->CR2 &= ~(uint8_t)(SlaveAdress<<1);
 }
 
 uint8_t I2C_Read(uint8_t SlaveAdress, uint8_t RegisterToRead, uint8_t BytesToRead){
    
-   /*konfiguracja ramki READ
-   START -> SlaveAdress + Write -> Slave Acknowlage -> Slave Register to read -> Slave Acknowlage->
    
-   */
    I2C1->CR2 |= (uint8_t)(SlaveAdress<<1); // adres urzadzenia z ktorym chcemy pogadac, przesuwamy o 1 zeby zrobic miejsce dla bitu R/W
    I2C1->CR2 &= ~I2C_CR2_RD_WRN;             //Przy odczycie najpierw musimy odczytac
-   I2C1->CR2 |= (1 << 16);//ile bajtow chcemy wgrac - ile adresow
+   I2C1->CR2 |= (uint32_t)(1 << 16);//ile bajtow chcemy wgrac - ile adresow
+   
+   while(I2C1->ISR & I2C_ISR_BUSY);
    
    I2C1->CR2 |= I2C_CR2_START;
    while (I2C1->CR2 & I2C_CR2_START);  // Start bit jest resetowane przez HW, czekamy zatem az bedzie zresetowane, przed kolejnym krokiem
@@ -80,31 +83,34 @@ uint8_t I2C_Read(uint8_t SlaveAdress, uint8_t RegisterToRead, uint8_t BytesToRea
    I2C1->TXDR = RegisterToRead;
    while (!(I2C1->ISR & I2C_ISR_TXE)); // czekamy az buffor Transmit bedzie pusty, az dane beda wyslane
    
+   while (!(I2C1->ISR & I2C_ISR_TC));
    //restart SR
    I2C1->CR2 |= (uint8_t)(SlaveAdress<<1);
    I2C1->CR2 |= I2C_CR2_RD_WRN;
    I2C1->CR2 &= ~(uint32_t)(1 << 16);                      // negacja poprzedniego wpisu
    I2C1->CR2 |= (uint32_t)(BytesToRead << 16);   // ile bajtow chcemy odczytac
+      
    I2C1->CR2 |= I2C_CR2_START;
    while (I2C1->CR2 & I2C_CR2_START);
+   
    while (!(I2C1->ISR & I2C_ISR_TXE));
    
+   uint8_t Read =(uint8_t)I2C1->RXDR;
    while (I2C1->ISR & I2C_ISR_RXNE);     
-  
-   while (!(I2C1->ISR & I2C_ISR_TC));
-   uint8_t Read =(uint8_t)I2C1->RXDR;   
    while (!(I2C1->ISR & I2C_ISR_TC));
    I2C1->CR2 |= I2C_CR2_STOP;
    while (I2C1->CR2 & I2C_CR2_STOP);
    
+   //resetowanie rejestru cr2
    I2C1->CR2 &= ~(uint8_t)(SlaveAdress<<1);
    I2C1->CR2 &= ~(uint32_t)(BytesToRead << 16);
+   
    return (uint8_t)Read;
 }
 
 void I2C_LSM303DLHC_Config_Init (void){
   Read_value_LSM303DLHC_A = (uint8_t)I2C_Read(Accelerometer_Adress,0x20,1);
-  I2C_Write(Accelerometer_Adress,0x20, 0x97,1);
+  I2C_Write(Accelerometer_Adress,0x20, 0x9F,1);
   Read_value_LSM303DLHC_A = (uint8_t)I2C_Read(Accelerometer_Adress,0x20,1);
    
 }

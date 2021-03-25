@@ -51,7 +51,7 @@ const uint8_t tab_SPI_L3GD20_XYZ_adress[6]= {0xE8,0xE9,0xEA,0xEB,0xEC,0xED};  //
 
 
 int main()
-{ 
+ { 
    // *** Wybor zegara ***
    //HSI_with_PLL();   
    HSE_with_PLL();                                    //taktowanie 72MHz                              
@@ -72,18 +72,26 @@ int main()
    //ADC2_with_DMA_Init(); 
    //L3GD20_Init();
    I2C_LSM303DLHC_Init();
-   I2C_LSM303DLHC_Config_Init();
+  I2C_LSM303DLHC_Config_Init();
+  
+  
+  I2C_Write(Magneto_Adress, 0x0, 0x14,1);   
+
+   I2C_Write(Magneto_Adress, 0x2, 0x00,1); 
+  
    while (1){        
        delay_ms(50); 
    
-   Read_value_LSM303DLHC_A = (uint8_t)I2C_Read(Magneto_Adress,0x32,1);      
-   I2C_Write(Magneto_Adress, 0x0, 0x98,1);   
-   Read_value_LSM303DLHC_A = (uint8_t)I2C_Read(Magneto_Adress,0x31,1); 
-
-
+   I2C_Write(Magneto_Adress, 0x0, 0x14,1);        
+   //Read_value_LSM303DLHC_A = (uint8_t)I2C_Read(Accelerometer_Adress,0x28,1);
+   Read_value_LSM303DLHC_M = (uint8_t)I2C_Read(Magneto_Adress,0x0,1); 
+  
+      I2C_Write(Magneto_Adress, 0x2, 0x03,1); 
+     Read_value_LSM303DLHC_M = (uint8_t)I2C_Read(Magneto_Adress,0x2,1); 
+      I2C_Write(Magneto_Adress, 0x2, 0x00,1); 
+     Read_value_LSM303DLHC_M = (uint8_t)I2C_Read(Magneto_Adress,0x3,1); 
       
-      
-   
+   Read_value_LSM303DLHC_M = (uint8_t)I2C_Read(Magneto_Adress,0x4,1); 
      
  
      
