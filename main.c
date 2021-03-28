@@ -23,6 +23,7 @@ uint32_t ADC2_Raw_value=0;
 float ADC2_Voltage=0; 
 uint32_t SPI_L3GD2_Read;
 
+//Gyroskop
 volatile int8_t SPI_L3GD2_XL;
 volatile int8_t SPI_L3GD2_XH;
 volatile int8_t SPI_L3GD2_YL;
@@ -32,8 +33,10 @@ volatile int8_t SPI_L3GD2_ZH;
 volatile int16_t SPI_L3GD2_X_value;
 volatile int16_t SPI_L3GD2_Y_value;
 volatile int16_t SPI_L3GD2_Z_value;
+int8_t tab_SPI_L3GD20_XYZ_values[6];
+const uint8_t tab_SPI_L3GD20_XYZ_adress[6]= {0xE8,0xE9,0xEA,0xEB,0xEC,0xED};  // L3GD20 - XL, XH, YL, YH, ZL, ZH
 
-
+//Accelero + Magneto
 volatile uint8_t Read_value_LSM303DLHC_A;
 volatile int8_t I2C_LSM303DLHC_A_XL;
 volatile int8_t I2C_LSM303DLHC_A_XH;
@@ -44,13 +47,13 @@ volatile int8_t I2C_LSM303DLHC_A_ZH;
 volatile int16_t I2C_LSM303DLHC_A_X_value;
 volatile int16_t I2C_LSM303DLHC_A_Y_value;
 volatile int16_t I2C_LSM303DLHC_A_Z_value;
-
-
 static volatile uint8_t Read_value_LSM303DLHC_M;
 
-int8_t tab_SPI_L3GD20_XYZ_values[6];
-const uint8_t tab_SPI_L3GD20_XYZ_adress[6]= {0xE8,0xE9,0xEA,0xEB,0xEC,0xED};  // L3GD20 - XL, XH, YL, YH, ZL, ZH
-
+//UART
+char StringToSendUART[40];
+char StringToReciveUART[20];
+uint8_t SizeOfDataToSendUART4;
+uint8_t SizeOfDataToReciveUART4 = 20;
 
 int main()
  { 
@@ -84,18 +87,20 @@ int main()
    I2C_LSM303DLHC_Config_Init();  
    
    /*** UART4 Init (Tx - PC10, RX - PC11) ***/
-   UART4_Init();
+   //UART4_Init();
+   //UART4_Init_with_DMA();
+   UART4_Init_with_DMA_TIM7();
    
-   char StringUART[40];
    
-   while (1){        
-       //delay_ms(1000);     
+   while (1){             
      
-      sprintf(StringUART, "Gyroskop X Value = %5d\r", SPI_L3GD2_X_value);
-      UART4_SendString(StringUART);
+      sprintf(StringToSendUART, "Gyroskop X Value = %5d\r\n", SPI_L3GD2_X_value);
+      SizeOfDataToSendUART4 = sizeof(StringToSendUART);
+      //UART4_SendString(StringToSendUART);
       
-     // UART4_SendChar(UART4_GetChar());
-    //  delay_ms(1000);
+      //UART4_SendString(StringToReciveUART);
+   
+      
       /*** Read Accelerometer Values via I2C - blocking mode ***/
       I2C_LSM303DLHC_A_Read_XYZ(); 
       /*** Calculate Gyroskop values via SPI - DMA***/

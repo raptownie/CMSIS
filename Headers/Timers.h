@@ -25,6 +25,8 @@ extern uint16_t PWM_temp;
 extern uint8_t FirstRun_GPIO_Init;
 extern uint8_t FirstRun_GPIO_PWM_Init;
 extern uint8_t EXTI0_flag;
+extern uint8_t SizeOfDataToSendUART4;
+extern uint8_t SizeOfDataToReciveUART4;
 
 void TIM7_config(void);
 void TIM7_IRQHandler(void);

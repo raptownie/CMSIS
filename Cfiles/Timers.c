@@ -3,22 +3,10 @@
 
 
 void TIM7_config(void){
-   /* 
-   Notatki basic Timer
-   UIF - Update Interrupts flag
-   UEV - Update Event
-   CK_INT - Internal clock source dla HSI 64Mhz APB1/2 jest 32MHz
-   
-   */
-   
-   
-   if (FirstRun_GPIO_Init == 0){
-      GPIO_Init();
-      FirstRun_GPIO_Init = 1;
-   }
+
    RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;                // podlaczenie zegara pod TIM7
-   TIM7->PSC = 16000-1;                                // dzielnik ustawiony na 8000 - 64MHz/8000=8kHz
-   TIM7->ARR = 6000;                                  // 8kHz -8 tys impulsow na 1 sekunde - przerwanie co 5s to 8000*5 =40k
+   TIM7->PSC = 10000-1;                                // dzielnik ustawiony na 10000 - 72Mhz/10000 = 7200 impulsow na 1s
+   TIM7->ARR = 5000;                                  // 8kHz -8 tys impulsow na 1 sekunde - przerwanie co 5s to 8000*5 =40k
    TIM7->DIER |= TIM_DIER_UIE;                                 // Update interrupt enabled
    NVIC_SetPriority(TIM7_IRQn,1);   
    NVIC_EnableIRQ(TIM7_IRQn);
@@ -27,24 +15,16 @@ void TIM7_config(void){
    }
 
 void TIM7_IRQHandler(void){
-   /*
-  static short k;
-   
-   if (k%2 ==0){
-      
-      GPIOE->ODR |= (uint16_t)Pin_13;
-      GPIOE->ODR &= (uint16_t)~Pin_12;
-      k++;
+   // UART4_Tx
+   DMA2_Channel5->CCR &= ~DMA_CCR_EN;    
+   DMA2_Channel5->CNDTR = SizeOfDataToSendUART4;
+   DMA2_Channel5->CCR |= DMA_CCR_EN; 
 
-   } else{
-      GPIOE->ODR |= (uint16_t)Pin_12;
-      GPIOE->ODR &= (uint16_t)~Pin_13;
-
-      k++;
-   }
-   k>3 ? k=2 : k ;
-   */
-   GPIOE->ODR ^= (uint16_t)Pin_13;
+   //UART4_Rx
+   DMA2_Channel3->CCR &= ~DMA_CCR_EN; 
+   DMA2_Channel3->CNDTR = SizeOfDataToReciveUART4; 
+   DMA2_Channel3->CCR |= DMA_CCR_EN;    
+  
    TIM7->SR &= ~TIM_CR1_CEN;                        // clearowanie flagi przerwania  
 }   
 
