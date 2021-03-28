@@ -2,6 +2,7 @@
 #define _UserSystemInit
 
 #include "stm32f3xx.h"
+#include <string.h>
 
 #define HSI_Clock 8000000        // bez PLL
 #define Pin_3 0x8

@@ -423,6 +423,11 @@
               <FileType>1</FileType>
               <FilePath>.\Cfiles\I2C.c</FilePath>
             </File>
+            <File>
+              <FileName>UART.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Cfiles\UART.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -462,6 +467,11 @@
               <FileName>I2C.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\Headers\I2C.h</FilePath>
+            </File>
+            <File>
+              <FileName>UART.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Headers\UART.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -523,6 +533,18 @@
         <targetInfos>
           <targetInfo name="Target 1"/>
         </targetInfos>
+      </file>
+      <file attr="config" category="source" name="USB\Config\USBD_Config.c" version="5.2.0">
+        <instance index="0" removed="1">RTE\USB\USBD_Config_0.c</instance>
+        <component Cbundle="MDK-Plus" Cclass="USB" Cgroup="Device" Cvendor="Keil" Cversion="6.14.1" condition="USB Core and Device Instance and Device Driver" maxInstances="4"/>
+        <package name="MDK-Middleware" schemaVersion="1.4" url="http://www.keil.com/pack/" vendor="Keil" version="7.12.0"/>
+        <targetInfos/>
+      </file>
+      <file attr="config" category="header" name="USB\Config\USBD_Config_CDC.h" version="5.2.0">
+        <instance index="0" removed="1">RTE\USB\USBD_Config_CDC_0.h</instance>
+        <component Cbundle="MDK-Plus" Cclass="USB" Cgroup="Device" Csub="CDC" Cvendor="Keil" Cversion="6.14.1" condition="USB Core and Device Instance and Device Driver" maxInstances="8"/>
+        <package name="MDK-Middleware" schemaVersion="1.4" url="http://www.keil.com/pack/" vendor="Keil" version="7.12.0"/>
+        <targetInfos/>
       </file>
     </files>
   </RTE>

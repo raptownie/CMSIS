@@ -8,6 +8,8 @@
 #include "Headers/ADC_DMA.h"
 #include "Headers/SPI.h"
 #include "Headers/I2C.h"
+#include "Headers/UART.h"
+
  
 volatile uint32_t timer_ms;
 uint8_t EXTI0_flag; 
@@ -60,57 +62,57 @@ int main()
    // *** Inicjalizacja GPIO - ledy + przycisk ***
   // GPIO_Init();
    
-   // *** TIM1 - licznik advanced, TIM7 - licznik basic (miganie dioda) ***
+   // *** TIM1 - licznik advanced - PWM, TIM7 - licznik basic (miganie dioda) ***
    //TIM7_config();
    //TIM1_config();
 
    // *** Przycisk (PA0) miganie diodami - nieblokujace***
    //EXTI0_config();
+    
+   //*** SPI GYROSKOP L3GD20 ****/
    //SPI_Config_for_Gyroskop();
    L3GD20_DMA_Init();
- //ADC2_Init();
-   //ADC2_with_DMA_Init(); 
    //L3GD20_Init();
-   I2C_LSM303DLHC_Init();
-  I2C_LSM303DLHC_Config_Init();
-  
-  
-  I2C_Write(Magneto_Adress, 0x0, 0x14,1);   
-
-   I2C_Write(Magneto_Adress, 0x2, 0x00,1); 
-  
-   while (1){        
-       delay_ms(50); 
+    
+   /*** Pomiary ADC ***/
+   //ADC2_Init();
+   //ADC2_with_DMA_Init(); 
    
-   I2C_Write(Magneto_Adress, 0x0, 0x14,1);        
-   //Read_value_LSM303DLHC_A = (uint8_t)I2C_Read(Accelerometer_Adress,0x28,1);
-   Read_value_LSM303DLHC_M = (uint8_t)I2C_Read(Magneto_Adress,0x0,1); 
-  
-      I2C_Write(Magneto_Adress, 0x2, 0x03,1); 
-     Read_value_LSM303DLHC_M = (uint8_t)I2C_Read(Magneto_Adress,0x2,1); 
-      I2C_Write(Magneto_Adress, 0x2, 0x00,1); 
-     Read_value_LSM303DLHC_M = (uint8_t)I2C_Read(Magneto_Adress,0x3,1); 
+   
+   /*** I2C Acclereo + Magneto ***/
+   I2C_LSM303DLHC_Init();
+   I2C_LSM303DLHC_Config_Init();  
+   
+   /*** UART4 Init (Tx - PC10, RX - PC11) ***/
+   UART4_Init();
+   
+   char StringUART[40];
+   
+   while (1){        
+       //delay_ms(1000);     
+     
+      sprintf(StringUART, "Gyroskop X Value = %5d\r", SPI_L3GD2_X_value);
+      UART4_SendString(StringUART);
       
-   Read_value_LSM303DLHC_M = (uint8_t)I2C_Read(Magneto_Adress,0x4,1); 
-     
- 
-     
-   I2C_LSM303DLHC_A_Read_XYZ(); 
-   L3GD20_XYZ_Calculate();     
-
-  
-        //ADC2_Raw_value = ADC2->DR;
-      // *** zabawa z LED ****
+     // UART4_SendChar(UART4_GetChar());
+    //  delay_ms(1000);
+      /*** Read Accelerometer Values via I2C - blocking mode ***/
+      I2C_LSM303DLHC_A_Read_XYZ(); 
+      /*** Calculate Gyroskop values via SPI - DMA***/
+      L3GD20_XYZ_Calculate();     
+       
+      /*** zabawa z LED ****/
       //LEDy_kolo();                                     //noreturn
       //GPIO_zPrzyciskiem();
       //GPIO_Kolko();  
       //ADC_control_PWM_Led();
        
       
-      // *** PWM ***
+      /*** PWM ***/
       //Zmiana_PWM_TIM1_Button();
       Zmiana_PWM_TIM1_stopniowo();
       
+      /*** Software filter low pass - push button debouncing ***/
       //Debouncing_SW_LPF();
       
         
