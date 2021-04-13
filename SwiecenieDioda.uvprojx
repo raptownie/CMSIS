@@ -428,6 +428,11 @@
               <FileType>1</FileType>
               <FilePath>.\Cfiles\UART.c</FilePath>
             </File>
+            <File>
+              <FileName>USB_setup.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Cfiles\USB_setup.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -472,6 +477,11 @@
               <FileName>UART.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\Headers\UART.h</FilePath>
+            </File>
+            <File>
+              <FileName>USB_setup.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Headers\USB_setup.h</FilePath>
             </File>
           </Files>
         </Group>

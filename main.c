@@ -9,6 +9,7 @@
 #include "Headers/SPI.h"
 #include "Headers/I2C.h"
 #include "Headers/UART.h"
+#include "Headers/USB_setup.h"
 
  
 volatile uint32_t timer_ms;
