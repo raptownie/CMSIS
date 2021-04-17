@@ -9,8 +9,13 @@
 #include "Headers/SPI.h"
 #include "Headers/I2C.h"
 #include "Headers/UART.h"
-#include "Headers/USB_setup.h"
+#include <stdio.h>
+//#include "Headers/USB_setup.h"
 
+
+/** USB_LIB**/
+#include "USB_LIB/usb_device.h"
+#include "USB_LIB/usbd_cdc_if.h"
  
 volatile uint32_t timer_ms;
 uint8_t EXTI0_flag; 
@@ -56,12 +61,28 @@ char StringToReciveUART[20];
 uint8_t SizeOfDataToSendUART4;
 uint8_t SizeOfDataToReciveUART4 = 20;
 
+//USB
+uint8_t Wiadomosc[40]; // Tablica zawierajaca dane do wyslania
+uint8_t *pWiadomosc = &Wiadomosc[0];
+uint8_t DlugoscWiadomosci = 0; // Zawiera dlugosc wysylanej wiadomosci
+
+uint8_t OdebranaWiadomosc[40]; // Tablica przechowujaca odebrane dane
+uint8_t ReceivedDataFlag = 0; // Flaga informujaca o odebraniu danych
+
 int main()
  { 
+    HAL_Init();
+    //HAL_Init();
    // *** Wybor zegara ***
    //HSI_with_PLL();   
    HSE_with_PLL();                                    //taktowanie 72MHz                              
    //HSI_without_PLL();                               //taktowanie z 8MHz
+    
+       /*** USB ***/ 
+ //  RCC->APB1ENR |= RCC_APB1ENR_USBEN;
+   MX_USB_DEVICE_Init();
+ // RCC->APB1ENR |= RCC_APB1ENR_USBEN;
+
    
    // *** Inicjalizacja GPIO - ledy + przycisk ***
   // GPIO_Init();
@@ -75,7 +96,7 @@ int main()
     
    //*** SPI GYROSKOP L3GD20 ****/
    //SPI_Config_for_Gyroskop();
-   L3GD20_DMA_Init();
+   //L3GD20_DMA_Init();
    //L3GD20_Init();
     
    /*** Pomiary ADC ***/
@@ -84,28 +105,30 @@ int main()
    
    
    /*** I2C Acclereo + Magneto ***/
-   I2C_LSM303DLHC_Init();
-   I2C_LSM303DLHC_Config_Init();  
+   //I2C_LSM303DLHC_Init();
+   //I2C_LSM303DLHC_Config_Init();  
    
    /*** UART4 Init (Tx - PC10, RX - PC11) ***/
    //UART4_Init();
    //UART4_Init_with_DMA();
-   UART4_Init_with_DMA_TIM7();
+   //UART4_Init_with_DMA_TIM7();
    
+  // delay_ms(500);
+
    
    while (1){             
      
-      sprintf(StringToSendUART, "Gyroskop X Value = %5d\r\n", SPI_L3GD2_X_value);
-      SizeOfDataToSendUART4 = sizeof(StringToSendUART);
+//      sprintf(StringToSendUART, "Gyroskop X Value = %5d\r\n", SPI_L3GD2_X_value);
+  //    SizeOfDataToSendUART4 = sizeof(StringToSendUART);
       //UART4_SendString(StringToSendUART);
       
       //UART4_SendString(StringToReciveUART);
    
       
       /*** Read Accelerometer Values via I2C - blocking mode ***/
-      I2C_LSM303DLHC_A_Read_XYZ(); 
+  //    I2C_LSM303DLHC_A_Read_XYZ(); 
       /*** Calculate Gyroskop values via SPI - DMA***/
-      L3GD20_XYZ_Calculate();     
+  //    L3GD20_XYZ_Calculate();     
        
       /*** zabawa z LED ****/
       //LEDy_kolo();                                     //noreturn
@@ -113,20 +136,39 @@ int main()
       //GPIO_Kolko();  
       //ADC_control_PWM_Led();
        
+      /*** USB ***/
+      //wyslanie wiadomosci
+      delay_ms(10);
+      DlugoscWiadomosci = sprintf((char *)pWiadomosc, "Siemasz Krzysiek\n\rWiadomosc z KEILa\n\r");
+		CDC_Transmit_FS(Wiadomosc, DlugoscWiadomosci);
+      delay_ms(50);
+      // Odeslanie odebranych danych przez USB
+      if(ReceivedDataFlag == 1){
+         ReceivedDataFlag = 0; 
+         DlugoscWiadomosci = sprintf((char *)pWiadomosc, "Odebrano: %s\n\r", OdebranaWiadomosc);
+         CDC_Transmit_FS(Wiadomosc, DlugoscWiadomosci);
+      }
       
       /*** PWM ***/
       //Zmiana_PWM_TIM1_Button();
-      Zmiana_PWM_TIM1_stopniowo();
+      //Zmiana_PWM_TIM1_stopniowo();
       
       /*** Software filter low pass - push button debouncing ***/
-      //Debouncing_SW_LPF();
+      Debouncing_SW_LPF();
       
         
    }
    
 }
 
+void Error_Handler(void)
+{
+   
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
 
+  /* USER CODE END Error_Handler_Debug */
+}
 
 
 
