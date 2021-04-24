@@ -1,0 +1,28 @@
+# depslib dependency file v1.0
+1619271607 source:c:\users\kamil\documents\nauk c\kalkulator\main.c
+	<stdio.h>
+	"dodawanie.h"
+	"Dzielenie.h"
+	"Mnozenie.h"
+	"Odejmowanie.h"
+
+1619269761 c:\users\kamil\documents\nauk c\kalkulator\dodawanie.h
+
+1619269763 source:c:\users\kamil\documents\nauk c\kalkulator\dodawanie.c
+	"Dodawanie.h"
+
+1619271475 source:c:\users\kamil\documents\nauk c\kalkulator\dzielenie.c
+	"Dzielenie.h"
+
+1619271413 source:c:\users\kamil\documents\nauk c\kalkulator\mnozenie.c
+	"Mnozenie.h"
+
+1619271473 c:\users\kamil\documents\nauk c\kalkulator\dzielenie.h
+
+1619271404 c:\users\kamil\documents\nauk c\kalkulator\mnozenie.h
+
+1619271317 c:\users\kamil\documents\nauk c\kalkulator\odejmowanie.h
+
+1619271317 source:c:\users\kamil\documents\nauk c\kalkulator\odejmowanie.c
+	"Odejmowanie.h"
+
