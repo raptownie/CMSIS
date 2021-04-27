@@ -14,7 +14,7 @@ OBJECTSDIR = $(ODIR)\Main.o $(ODIR)\Dodawanie.o $(ODIR)\Odejmowanie.o \
 #flagi kompilacji
 CFLAGS = -Wall -g -c
 
-kalkulator.exe: $(OBJECTSDIR)
+$(EXEDIR)\kalkulator.exe: $(OBJECTSDIR)
 	gcc.exe -o $(EXEDIR)\kalkulator-makefile.exe $(OBJECTSDIR)
 	echo "Kompilacja zakonczona"
 	
